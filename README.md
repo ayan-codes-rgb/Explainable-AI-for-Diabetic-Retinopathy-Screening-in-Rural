@@ -1,8 +1,5 @@
-# Explainable AI for Diabetic Retinopathy Screening in Rural India
-
-MATLAB pipeline for automated DR screening: quality assessment, retinal
-structure segmentation, severity grading (ICDR 0-4), explainability, and a
-Simulink model of the telemedicine workflow.
+# Explainable AI for Diabetic Retinopathy Screening in Rural
+MATLAB-based explainable AI pipeline for automated Diabetic Retinopathy screening: image quality assessment, retinal structure segmentation, DR severity grading, Grad-CAM explainability, and Simulink workflow simulation for rural telemedicine deployment in India.
 
 ## Repo layout
 
