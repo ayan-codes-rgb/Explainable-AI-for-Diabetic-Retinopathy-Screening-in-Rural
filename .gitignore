@@ -1,5 +1,6 @@
-# datasets live on Drive, never in git
-data/
+# datasets live on Drive, never in git (folder kept, contents ignored)
+data/*
+!data/README.md
 *.zip
 *.tar.gz
 
