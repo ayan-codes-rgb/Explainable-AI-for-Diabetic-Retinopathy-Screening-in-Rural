@@ -1,0 +1,16 @@
+# datasets live on Drive, never in git
+data/
+*.zip
+*.tar.gz
+
+# MATLAB binaries churn badly in merges
+*.mat
+*.fig
+*.asv
+*.slxc
+slprj/
+codegen/
+
+# trained models
+*.onnx
+checkpoints/
