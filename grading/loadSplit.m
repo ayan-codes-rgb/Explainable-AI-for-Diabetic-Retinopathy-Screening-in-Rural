@@ -1,47 +1,52 @@
-function T = loadSplit(splitName, dataRoot)
-%LOADSPLIT Read the fixed IDRiD train/val/test split.
+function T = loadSplit(splitName, roots, varargin)
+%LOADSPLIT Read the fixed train/val/test split (IDRiD + APTOS).
 %
-%   T = LOADSPLIT()                          every row, no file paths
-%   T = LOADSPLIT('train', dataRoot)         training rows, with full paths
-%   T = LOADSPLIT({'train','val'}, dataRoot) more than one split at once
+%   T = LOADSPLIT()                              every row, no file paths
+%   T = LOADSPLIT('train', roots)                training rows, with paths
+%   T = LOADSPLIT({'train','val'}, roots)        more than one split
+%   T = LOADSPLIT('val', roots, 'Dataset','IDRiD')   one dataset only
 %
-%   dataRoot is the folder that CONTAINS "1. Original Images" -- i.e. the
-%   unzipped "B. Disease Grading" folder, wherever you put it. The images
-%   are not in this repo, so the path is yours to supply.
+%   ROOTS -- where the images live on your disk
+%     A struct with one field per dataset:
+%         roots.IDRiD = 'C:\dr-data\IDRiD\B. Disease Grading';
+%         roots.APTOS = 'C:\dr-data\APTOS';        % contains train_images\
+%     A plain string is accepted for backwards compatibility and is treated
+%     as the IDRiD root; APTOS rows are then dropped with a warning.
 %
 %   Columns
-%     id          unique row id. Image names REPEAT between the official
-%                 training and testing folders (both contain IDRiD_001.jpg),
-%                 so never key on image_name alone.
-%     dataset     'IDRiD'
+%     id          unique row id. Image names REPEAT between IDRiD's official
+%                 training and testing folders, so never key on image_name.
+%     dataset     'IDRiD' | 'APTOS'
 %     split       'train' | 'val' | 'test'
-%     image_name  e.g. IDRiD_001
-%     relpath     path relative to dataRoot
 %     grade       0-4, International Clinical DR severity scale
-%     referable   true when grade >= 2 (this is the screening decision)
-%     dme_risk    0-2, risk of macular oedema (a second, independent label)
-%     file        full path -- added only when dataRoot is supplied
+%     referable   true when grade >= 2 -- the screening decision
+%     dme_risk    0-2, IDRiD only (empty for APTOS)
+%     file        full path -- added only when roots is supplied
 %
-%   THIS SPLIT IS A FIXED ARTIFACT. Do not regenerate it.
-%   It was produced once by a stratified holdout -- 15% of the official
-%   413-image training set, seed 20260909 -- and committed so that every
-%   run, every teammate and every reported number refers to the same
-%   partition. Regenerate it and your results stop being comparable with
-%   anyone else's, including your own from yesterday.
+%   THE SPLIT IS A FIXED ARTIFACT. Do not regenerate it. IDRiD's assignments
+%   were made first and have been preserved byte-for-byte since; APTOS was
+%   appended later with the same seed and the same 15% validation fraction.
+%   Regenerate it and your numbers stop being comparable with your own from
+%   last week, let alone your teammates'.
 %
-%   The official 103-image test set is untouched and must stay that way
-%   until final evaluation. Tune on val, report on test, once.
+%   TEST IS IDRiD ONLY -- 103 images, the official IDRiD test set, untouched.
+%   APTOS contributes to train and val but never to test, so the reported
+%   benchmark stays on Indian fundus cameras with expert consensus grades.
 %
-%   Example
-%     root = 'C:\dr-data\IDRiD\B. Disease Grading';
-%     tr   = loadSplit('train', root);
-%     imds = imageDatastore(tr.file, 'ReadFcn', makeFundusReadFcn());
-%     Y    = categorical(tr.grade);
+%   NOTE ON DOMAIN SHIFT. Validation is now mostly APTOS (611 rows, 42.7%
+%   referable) while test is IDRiD (103 rows, 62.1% referable). Different
+%   cameras, different disease prevalence. A threshold tuned on val may
+%   transfer imperfectly; use 'Dataset','IDRiD' if you want to check.
 %
-%   See also MAKEFUNDUSREADFCN, LOADFUNDUS.
+%   See also BUILDDATASTORES, RUNBASELINE, MAKEFUNDUSREADFCN.
 
-here   = fileparts(mfilename('fullpath'));
-csvPath = fullfile(here, 'idrid_split.csv');
+p = inputParser;
+p.FunctionName = 'loadSplit';
+p.addParameter('Dataset', '', @(x) ischar(x) || isstring(x) || iscellstr(x));
+p.parse(varargin{:});
+
+here    = fileparts(mfilename('fullpath'));
+csvPath = fullfile(here, 'split.csv');
 if exist(csvPath, 'file') ~= 2
     error('loadSplit:missingCsv', 'Split file not found: %s', csvPath);
 end
@@ -55,27 +60,60 @@ if nargin >= 1 && ~isempty(splitName)
     valid = ["train" "val" "test"];
     bad   = want(~ismember(want, valid));
     if ~isempty(bad)
-        error('loadSplit:badSplit', ...
-            'Unknown split "%s". Valid: train, val, test.', bad(1));
+        error('loadSplit:badSplit', 'Unknown split "%s". Valid: train, val, test.', bad(1));
     end
     T = T(ismember(T.split, want), :);
 end
 
-% ---- attach full paths -----------------------------------------------
-if nargin >= 2 && ~isempty(dataRoot)
-    rel    = strrep(T.relpath, "/", filesep);
-    T.file = fullfile(string(dataRoot), rel);
+% ---- filter by dataset -----------------------------------------------
+wantDs = string(p.Results.Dataset);
+if ~isempty(wantDs) && wantDs ~= ""
+    T = T(ismember(T.dataset, wantDs), :);
+end
 
-    present = arrayfun(@(f) isfile(f), T.file);
-    if ~any(present)
-        error('loadSplit:wrongDataRoot', ...
-            ['No images found under "%s".\nExpected to find, for example:\n  %s\n' ...
-             'dataRoot should be the unzipped "B. Disease Grading" folder.'], ...
-            dataRoot, T.file(1));
-    elseif ~all(present)
-        error('loadSplit:missingImages', ...
-            '%d of %d images are missing under "%s". First missing: %s', ...
-            sum(~present), height(T), dataRoot, T.file(find(~present, 1)));
-    end
+if nargin < 2 || isempty(roots)
+    return
+end
+
+% ---- normalise roots -------------------------------------------------
+if ischar(roots) || isstring(roots)
+    roots = struct('IDRiD', char(roots));
+elseif ~isstruct(roots)
+    error('loadSplit:badRoots', ...
+        'roots must be a struct of dataset roots, or a string for IDRiD.');
+end
+
+present  = string(fieldnames(roots))';
+needed   = unique(T.dataset)';
+missing  = setdiff(needed, present);
+if ~isempty(missing)
+    warning('loadSplit:noRootFor', ...
+        ['No root given for %s -- those %d rows are dropped. Supply ' ...
+         'roots.%s to include them.'], missing(1), sum(T.dataset == missing(1)), missing(1));
+    T = T(ismember(T.dataset, present), :);
+end
+if isempty(T)
+    error('loadSplit:nothingLeft', 'No rows remain after filtering.');
+end
+
+% ---- attach full paths -----------------------------------------------
+T.file = strings(height(T), 1);
+for ds = unique(T.dataset)'
+    m   = T.dataset == ds;
+    rel = strrep(T.relpath(m), "/", filesep);
+    T.file(m) = fullfile(string(roots.(char(ds))), rel);
+end
+
+present = arrayfun(@(f) isfile(f), T.file);
+if ~any(present)
+    error('loadSplit:wrongRoot', ...
+        ['No images found. Expected for example:\n  %s\n' ...
+         'IDRiD root = the unzipped "B. Disease Grading" folder.\n' ...
+         'APTOS root = the folder CONTAINING train_images.'], T.file(1));
+elseif ~all(present)
+    bad = find(~present, 1);
+    error('loadSplit:missingImages', ...
+        '%d of %d images are missing. First: %s', ...
+        sum(~present), height(T), T.file(bad));
 end
 end

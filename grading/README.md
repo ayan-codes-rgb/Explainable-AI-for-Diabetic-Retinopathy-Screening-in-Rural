@@ -13,120 +13,88 @@ Read `../common/README.md` before writing any image code. Use `loadFundus()`, ne
 
 ## The split
 
-`idrid_split.csv` is the **fixed** partition of IDRiD's disease-grading set.
-Read it with `loadSplit.m`; do not regenerate it.
+`split.csv` is the **fixed** partition, covering both datasets. Read it with
+`loadSplit.m`; do not regenerate it.
 
 ```matlab
-root = 'C:\dr-data\IDRiD\B. Disease Grading';   % wherever you unzipped it
-tr   = loadSplit('train', root);
-va   = loadSplit('val',   root);
+roots.IDRiD = 'C:\Users\c7849\Downloads\dr-data\IDRiD\B. Disease Grading';
+roots.APTOS = 'C:\Users\c7849\Downloads\dr-data\APTOS';   % contains train_images\
 
-imds = imageDatastore(tr.file, 'ReadFcn', makeFundusReadFcn());
-Y    = categorical(tr.grade);
+S = buildDatastores(roots);
+R = runBaseline(roots);          % threshold cross-validated by default
+T = rocReport(R);
 ```
 
-Built by stratified holdout: 15% of IDRiD's official 413-image training set,
-seed 20260909. The official 103-image test set is carried through untouched.
+|  | g0 | g1 | g2 | g3 | g4 | total | referable |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| IDRiD train | 114 | 17 | 116 | 63 | 42 | 352 | 62.8% |
+| APTOS train | 1534 | 314 | 849 | 164 | 251 | 3112 | 40.6% |
+| **all train** | 1648 | 331 | 965 | 227 | 293 | **3464** | 42.9% |
+| IDRiD val | 20 | 3 | 20 | 11 | 7 | 61 | 62.3% |
+| APTOS val | 271 | 56 | 150 | 29 | 44 | 550 | 40.5% |
+| **all val** | 291 | 59 | 170 | 40 | 51 | **611** | 42.7% |
+| **test (IDRiD only)** | 34 | 5 | 32 | 19 | 13 | **103** | 62.1% |
 
-| grade | train | val | test | train % | val % | test % |
-|---|---:|---:|---:|---:|---:|---:|
-| 0 no DR | 114 | 20 | 34 | 32.4 | 32.8 | 33.0 |
-| 1 mild NPDR | 17 | 3 | 5 | 4.8 | 4.9 | 4.9 |
-| 2 moderate NPDR | 116 | 20 | 32 | 33.0 | 32.8 | 31.1 |
-| 3 severe NPDR | 63 | 11 | 19 | 17.9 | 18.0 | 18.4 |
-| 4 proliferative | 42 | 7 | 13 | 11.9 | 11.5 | 12.6 |
-| **total** | **352** | **61** | **103** | | | |
+IDRiD assignments are byte-identical to the original split and have never been
+regenerated. APTOS was appended later with the same seed and the same 15%
+validation fraction. **Test is IDRiD only** -- the official 103-image test set,
+untouched -- so the reported benchmark stays on Indian fundus cameras with
+expert consensus grades.
 
-Referable DR (grade >= 2): train 62.8%, val 62.3%, test 62.1%.
+## Threshold selection
+
+`runBaseline` defaults to `'Threshold','cv'`: pool train+val, run stratified
+5-fold cross-validation, and pick the threshold on the out-of-fold scores.
+
+This exists because the old held-out approach chose the threshold from 61
+validation images with only 23 non-referable ones. Each of those 23 was worth
+4.3 points of specificity, so the "optimal" cutoff was largely noise -- and it
+cost about 8 points of test specificity versus what the same model could
+deliver at the same sensitivity. Pass `'Threshold','val'` to reproduce the old
+behaviour for comparison.
 
 ## Things that will bite you
 
-**Image names repeat.** Both the official training and testing folders contain
-an `IDRiD_001.jpg`. Key on the `id` column or the full path, never on
-`image_name`.
+**Domain shift between val and test.** Validation is now mostly APTOS (611
+rows, 42.7% referable, many cameras, variable quality) while test is IDRiD
+(103 rows, 62.1% referable, one camera). A threshold tuned on val may transfer
+imperfectly. `loadSplit('val', roots, 'Dataset','IDRiD')` isolates the IDRiD
+part if you want to check.
 
-**Grade 1 validation is 3 images.** Any per-class metric you compute for mild
-NPDR on the validation set is noise. That is not a bug in the split -- IDRiD
-only has 25 grade-1 images in total, and stratifying honestly means val gets
-3 of them. Report grade-1 performance from the test set (5 images) with the
-sample size stated, or fold it into the binary referable metric where it
-belongs. APTOS is the real fix; it has far more mild cases.
+**Image names repeat.** Both IDRiD folders contain an `IDRiD_001.jpg`. Key on
+`id` or the full path, never `image_name`.
 
-**Do not touch the test set until the end.** Tune the decision threshold on
-`val`, then evaluate `test` once. Re-tuning against test is how a 91% becomes
-a number that does not survive questioning.
+**Grade 1 is no longer the scarce class.** With APTOS added it has 331 training
+images. **Grade 3 (severe NPDR) is now scarcest at 227** -- and it sits on the
+*referable* side, so its errors cost sensitivity (the tighter >90% target).
 
-**Argmax is not your classifier.** Argmax optimises accuracy. You are graded
-on sensitivity at >90%, which means deliberately moving the referable
-threshold to accept more false positives. Pick the threshold on `val` with
-`rocmetrics`/`perfcurve`, then freeze it.
+**Do not touch the test set until the end.** Tune on CV or val, evaluate test
+once. Re-tuning against test is how a 91% becomes a number that does not
+survive questioning.
 
-## Suggested order of work
+**Argmax is not your classifier.** Argmax optimises accuracy; you are graded on
+sensitivity. The threshold is chosen deliberately and then frozen.
 
-1. Feature-extraction baseline (frozen pretrained net + `fitcecoc`) -- runs on
-   CPU in minutes and gives you something to beat
-2. Fine-tune once a GPU machine is available
-3. Add APTOS to training, keep IDRiD's test set as the reported benchmark
-4. Threshold tuning on `val` for the >90%/85% target
-5. Ablation vs the baseline in step 1 -- this is the comparison the problem
-   statement asks for
+## First run with APTOS is slow
 
-## Day 1 — what to run
+~4,000 images at roughly a second each -- budget an hour, once. Features are
+cached in `grading/cache/` afterwards, so later runs take seconds. The cache
+stores the file list and invalidates itself if the split changes.
 
-```matlab
-cd 'C:\\Users\\c7849\\OneDrive\\Desktop\\SIH Diabetic Retinopathy'
-addpath(genpath('common')); addpath(genpath('grading'))
-root = 'C:\\Users\\c7849\\Downloads\\dr-data\\IDRiD\\B. Disease Grading';
-
-S = buildDatastores(root);            % datastores wired to the fixed split
-classWeights(S.train.labels)          % see the imbalance and the weights
-R = runBaseline(root);                % frozen backbone + linear classifier
-```
-
-`runBaseline` prints validation- and test-set sensitivity/specificity for
-referable DR and returns the trained model plus the tuned threshold.
-
-### Files
+## Files
 
 | file | what it does |
 |---|---|
-| `loadSplit.m` | reads the fixed train/val/test split |
-| `buildDatastores.m` | datastores through `loadFundus`, augmentation on train only |
-| `classWeights.m` | per-class loss weights, with the reasoning |
-| `runBaseline.m` | CPU baseline: frozen backbone -> features -> linear classifier |
+| `split.csv` | the fixed partition, IDRiD + APTOS |
+| `loadSplit.m` | reads it, attaches full paths, filters by split/dataset |
+| `buildDatastores.m` | datastores through `loadFundus`; augmentation on train only |
+| `classWeights.m` | per-class loss weights |
+| `runBaseline.m` | frozen backbone -> features -> linear classifier |
+| `rocReport.m` | ROC curves, AUC with CI, achievable operating points |
 
-### Backbone choice
+## Baseline result to beat
 
-**ResNet-18** at 224x224, used as a frozen feature extractor.
-
-Not ResNet-50: this machine has an AMD GPU and MATLAB is CUDA-only, so
-everything runs on CPU until the GPU machine is confirmed. ResNet-18 is
-~4x cheaper and, as a frozen extractor, the difference in feature quality
-is small compared with the difference in how many experiments you get to run.
-
-Feature extraction rather than fine-tuning, for the same reason: one forward
-pass over the data, then seconds per experiment. That is what lets you tune
-class weights and the decision threshold, which is what actually moves
-sensitivity.
-
-Fine-tuning is step 2, once there is a GPU. The baseline then becomes the
-ablation comparison the problem statement asks for.
-
-### Class balancing
-
-Default is `inverse-sqrt`, not full inverse frequency. Full inverse
-frequency on a class with 17 training images makes each of those images
-enormously influential and the model memorises them.
-
-Weight grade 3, not grade 0. On IDRiD+APTOS combined, grade 3 (severe NPDR)
-is the scarcest class at 6.8% -- and it is on the *referable* side, so
-errors there cost **sensitivity** (>90% target). Grade 1 costs
-**specificity** (>85%). The errors are not equally expensive.
-
-### Known unknowns
-
-`runBaseline` has not been executed -- no MATLAB on the machine that wrote
-it. The logic is sound but expect one round of fixes, most likely around
-the pretrained-network API (`imagePretrainedNetwork` vs `resnet18`) or the
-feature layer name. Both are handled defensively and error with a message
-naming the fix.
+Frozen ResNet-18, IDRiD only, threshold from held-out val:
+**AUC 0.877 (95% CI 0.801-0.932)**, sensitivity 90.6%, specificity 59.0% on the
+103-image test set. Quote the AUC, not the operating point -- it is
+threshold-independent and it is what published DR work reports.

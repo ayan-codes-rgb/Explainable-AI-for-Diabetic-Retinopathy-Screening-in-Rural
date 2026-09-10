@@ -1,10 +1,13 @@
-function S = buildDatastores(dataRoot, varargin)
+function S = buildDatastores(roots, varargin)
 %BUILDDATASTORES Datastores for DR grading, wired to the fixed split.
 %
 %   S = BUILDDATASTORES(dataRoot)
 %   S = BUILDDATASTORES(dataRoot, 'Name', Value, ...)
 %
-%   dataRoot is the unzipped "B. Disease Grading" folder.
+%   roots is a struct of dataset roots, e.g.
+%       roots.IDRiD = 'C:\dr-data\IDRiD\B. Disease Grading';
+%       roots.APTOS = 'C:\dr-data\APTOS';
+%   A plain string is treated as the IDRiD root (APTOS rows dropped).
 %
 %   Options
 %     'InputSize'  [r c], default [224 224]. 224 keeps CPU work sane; raise
@@ -24,7 +27,9 @@ function S = buildDatastores(dataRoot, varargin)
 %   at inference time.
 %
 %   Example
-%     S = buildDatastores('C:\dr-data\IDRiD\B. Disease Grading');
+%     roots.IDRiD = 'C:\dr-data\IDRiD\B. Disease Grading';
+%     roots.APTOS = 'C:\dr-data\APTOS';
+%     S = buildDatastores(roots);
 %     numel(S.train.labels)
 %
 %   See also LOADSPLIT, MAKEFUNDUSREADFCN, CLASSWEIGHTS.
@@ -54,7 +59,7 @@ end
 S = struct('inputSize', inputSize, 'task', task, 'classes', classes);
 
 for nm = ["train" "val" "test"]
-    T = loadSplit(char(nm), dataRoot);
+    T = loadSplit(char(nm), roots);
 
     if task == "grade"
         Y = categorical(T.grade, 0:4, {'0','1','2','3','4'});
