@@ -91,8 +91,15 @@ mdl    = fitcecoc(F.train, Ytrain, 'Learners', tmpl, ...
 classes = categories(Ytrain);
 posName = classes{end};
 posCol  = find(strcmp(classes, posName), 1);
-[~, ~, Pval]  = predict(mdl, F.val);
-[~, ~, Ptest] = predict(mdl, F.test);
+% fitcecoc's 3rd output is per-binary-learner scores (one column for a
+% binary problem); calibrated posteriors are the 4th, available because the
+% model was fitted with FitPosterior.
+[~, ~, ~, Pval]  = predict(mdl, F.val);
+[~, ~, ~, Ptest] = predict(mdl, F.test);
+if size(Pval, 2) ~= numel(classes)
+    error('runBaseline:posteriorShape', ...
+        'Expected %d posterior columns, got %d.', numel(classes), size(Pval,2));
+end
 
 yVal  = S.val.labels  == posName;
 yTest = S.test.labels == posName;
