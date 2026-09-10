@@ -68,6 +68,26 @@ for k = 1:numel(splits)
         numel(y), sum(y), sum(~y));
     fprintf('  AUC %.3f   95%% CI %.3f - %.3f\n', A(1), A(2), A(3));
 
+    % Per-dataset breakdown. A pooled AUC mixes populations of different
+    % difficulty: APTOS is a screening population, ~half of it obviously
+    % normal and easy to separate; IDRiD is clinic-collected, 62% referable
+    % and full of borderline cases. A high pooled AUC can hide a much lower
+    % one on the population you actually deploy to.
+    if isfield(R.scores.(nm), 'dataset')
+        ds = string(R.scores.(nm).dataset);
+        u  = unique(ds);
+        if numel(u) > 1
+            fprintf('  per dataset:\n');
+            for d = u'
+                m = ds == d;
+                if numel(unique(y(m))) < 2, continue; end
+                [~,~,~,Ad] = perfcurve(y(m), s(m), true, 'NBoot', 200);
+                fprintf('     %-6s AUC %.3f  (n=%d: %d referable, %d not)\n', ...
+                    d, Ad(1), sum(m), sum(y & m), sum(~y & m));
+            end
+        end
+    end
+
     fprintf('  sensitivity available at a given specificity:\n');
     for tgt = [0.80 0.85 0.90]
         [sens, spec, t] = iBestAt(y, s, 'spec', tgt);

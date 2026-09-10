@@ -149,6 +149,7 @@ switch mode
         mdl = fitcecoc(Xp, Yp, 'Learners', tmpl, 'ClassNames', classes, ...
                        'Weights', rwAll, 'FitPosterior', true);
         tuneScore = oof;
+        tuneDs    = dsP;
 
     case 'val'
         Ytr = S.train.labels;
@@ -172,6 +173,7 @@ switch mode
         tuneOn = sprintf('held-out val, %d %s images', sum(calib), ...
                          iTernary(strcmpi(char(opt.CalibrateOn),'all'), 'pooled', char(opt.CalibrateOn)));
         tuneScore = Pv(:, posCol);
+        tuneDs    = S.val.tbl.dataset;
 end
 
 % ---- 4. single test evaluation --------------------------------------
@@ -203,8 +205,8 @@ R = struct('model', mdl, 'threshold', thr, 'targetReached', reached, ...
            'test',   struct('sensitivity', sensT,    'specificity', specT), ...
            'features', struct('dim', size(F.train,2), 'layer', featLayer), ...
            'scores', struct('positiveClass', posName, ...
-                'val',  struct('score', tuneScore, 'truth', yTune), ...
-                'test', struct('score', sTest,     'truth', yTest)));
+                'val',  struct('score', tuneScore, 'truth', yTune, 'dataset', tuneDs), ...
+                'test', struct('score', sTest,     'truth', yTest, 'dataset', S.test.tbl.dataset)));
 end
 
 % =====================================================================
