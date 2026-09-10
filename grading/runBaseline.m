@@ -41,6 +41,21 @@ function R = runBaseline(roots, varargin)
 %     'KFold'      5
 %     'Refresh'    false -- true recomputes and re-caches features
 %     'BatchSize'  32
+%     'DomainWeight' 'balanced' (default) | 'none' | numeric IDRiD multiplier
+%     'CalibrateOn'  'IDRiD' (default) | 'APTOS' | 'all'
+%
+%   DOMAIN SHIFT -- why the last two options exist
+%   Training is ~3,100 APTOS images against ~350 IDRiD, so APTOS outvotes
+%   IDRiD roughly 9:1 and the classifier optimises for APTOS cameras. The
+%   test set is IDRiD. Measured effect of ignoring this: cross-validated AUC
+%   0.967 on the (APTOS-dominated) pooled set, but 0.837 on IDRiD test, and
+%   a threshold picked on pooled scores gave 79.7% sensitivity on IDRiD when
+%   the same model could reach 90.6% at a different cutoff.
+%
+%   'DomainWeight','balanced' gives each dataset equal total influence while
+%   keeping every image. 'CalibrateOn','IDRiD' picks the threshold using only
+%   IDRiD out-of-fold scores -- the model's RANKING transfers across domains,
+%   its score SCALE does not, so the cutoff must come from the target domain.
 %
 %   See also LOADSPLIT, BUILDDATASTORES, CLASSWEIGHTS, ROCREPORT.
 
@@ -55,6 +70,8 @@ p.addParameter('Threshold',  'cv');
 p.addParameter('KFold',      5);
 p.addParameter('Refresh',    false);
 p.addParameter('BatchSize',  32);
+p.addParameter('DomainWeight', 'balanced');
+p.addParameter('CalibrateOn',  'IDRiD');
 p.parse(varargin{:});
 opt = p.Results;
 
@@ -99,8 +116,13 @@ switch mode
         classes = categories(Yp);
         posName = classes{end};
         posCol  = find(strcmp(classes, posName), 1);
+        dsP = [S.train.tbl.dataset; S.val.tbl.dataset];
         [w, wTable] = classWeights(Yp, opt.Weights);
         fprintf('\nclass balance (train+val pooled):\n'); disp(wTable);
+        [rwAll, dwTable] = iCombinedWeights(Yp, w, dsP, opt.DomainWeight);
+        if ~isempty(dwTable)
+            fprintf('domain balance:\n'); disp(dwTable);
+        end
 
         k   = opt.KFold;
         cvp = cvpartition(Yp, 'KFold', k);        % stratified by class
@@ -110,7 +132,7 @@ switch mode
             itr = training(cvp, i); ite = test(cvp, i);
             m = fitcecoc(Xp(itr,:), Yp(itr), 'Learners', tmpl, ...
                          'ClassNames', classes, ...
-                         'Weights', iRowWeights(Yp(itr), w), 'FitPosterior', true);
+                         'Weights', rwAll(itr), 'FitPosterior', true);
             [~, ~, ~, P] = predict(m, Xp(ite,:));
             oof(ite) = P(:, posCol);
             fprintf('\r  fold %d/%d', i, k);
@@ -118,11 +140,14 @@ switch mode
         fprintf('\n');
 
         yTune = Yp == posName;
-        [thr, sensTune, specTune, reached] = iTuneThreshold(yTune, oof, opt.TargetSens);
-        tuneOn = sprintf('%d-fold CV, %d images', k, numel(Yp));
+        calib = iCalibMask(dsP, opt.CalibrateOn);
+        [thr, sensTune, specTune, reached] = ...
+            iTuneThreshold(yTune(calib), oof(calib), opt.TargetSens);
+        tuneOn = sprintf('%d-fold CV, %d %s images', k, sum(calib), ...
+                         iTernary(strcmpi(char(opt.CalibrateOn),'all'), 'pooled', char(opt.CalibrateOn)));
 
         mdl = fitcecoc(Xp, Yp, 'Learners', tmpl, 'ClassNames', classes, ...
-                       'Weights', iRowWeights(Yp, w), 'FitPosterior', true);
+                       'Weights', rwAll, 'FitPosterior', true);
         tuneScore = oof;
 
     case 'val'
@@ -132,13 +157,20 @@ switch mode
         posCol  = find(strcmp(classes, posName), 1);
         [w, wTable] = classWeights(Ytr, opt.Weights);
         fprintf('\nclass balance (train):\n'); disp(wTable);
+        [rwTr, dwTable] = iCombinedWeights(Ytr, w, S.train.tbl.dataset, opt.DomainWeight);
+        if ~isempty(dwTable)
+            fprintf('domain balance:\n'); disp(dwTable);
+        end
 
         mdl = fitcecoc(F.train, Ytr, 'Learners', tmpl, 'ClassNames', classes, ...
-                       'Weights', iRowWeights(Ytr, w), 'FitPosterior', true);
+                       'Weights', rwTr, 'FitPosterior', true);
         [~, ~, ~, Pv] = predict(mdl, F.val);
         yTune = S.val.labels == posName;
-        [thr, sensTune, specTune, reached] = iTuneThreshold(yTune, Pv(:,posCol), opt.TargetSens);
-        tuneOn = sprintf('held-out val, %d images', numel(yTune));
+        calib = iCalibMask(S.val.tbl.dataset, opt.CalibrateOn);
+        [thr, sensTune, specTune, reached] = ...
+            iTuneThreshold(yTune(calib), Pv(calib,posCol), opt.TargetSens);
+        tuneOn = sprintf('held-out val, %d %s images', sum(calib), ...
+                         iTernary(strcmpi(char(opt.CalibrateOn),'all'), 'pooled', char(opt.CalibrateOn)));
         tuneScore = Pv(:, posCol);
 end
 
@@ -299,6 +331,59 @@ if ~reached
         100*targetSens);
 end
 thr = best.thr; sens = best.sens; spec = best.spec;
+end
+
+% =====================================================================
+function m = iCalibMask(dsCol, spec)
+%ICALIBMASK Which rows may be used to choose the threshold.
+%   The model's ranking transfers across domains; its score SCALE does not.
+%   Test is IDRiD only, so the cutoff should be picked on IDRiD scores --
+%   a threshold calibrated on APTOS lands in the wrong place on IDRiD.
+spec = string(spec);
+if strcmpi(spec, "all")
+    m = true(numel(dsCol), 1);
+    return
+end
+m = string(dsCol) == spec;
+if ~any(m)
+    error('runBaseline:emptyCalibration', ...
+        'CalibrateOn="%s" matches no rows. Datasets present: %s', ...
+        spec, strjoin(unique(string(dsCol))', ', '));
+end
+m = m(:);
+end
+
+% =====================================================================
+function [rw, T] = iCombinedWeights(Y, w, dsCol, spec)
+%ICOMBINEDWEIGHTS Per-row weight = class weight x domain weight.
+%   Training is ~3,100 APTOS against ~350 IDRiD, so APTOS outvotes IDRiD
+%   roughly 9:1 and the classifier optimises for APTOS cameras. Test is
+%   IDRiD. 'balanced' gives each dataset equal total influence while keeping
+%   every image; a number is used directly as the IDRiD multiplier.
+rw = iRowWeights(Y, w);
+ds = string(dsCol(:));
+dw = ones(numel(ds), 1);
+T  = table.empty;
+
+if isnumeric(spec)
+    dw(ds == "IDRiD") = spec;
+elseif strcmpi(string(spec), "none")
+    return
+elseif strcmpi(string(spec), "balanced")
+    u = unique(ds); K = numel(u); N = numel(ds);
+    for i = 1:K
+        m = ds == u(i);
+        dw(m) = N / (K * sum(m));
+    end
+else
+    error('runBaseline:badDomainWeight', ...
+        'DomainWeight must be ''balanced'', ''none'', or a numeric IDRiD multiplier.');
+end
+
+u = unique(ds);
+T = table(u, arrayfun(@(x) sum(ds==x), u), arrayfun(@(x) dw(find(ds==x,1)), u), ...
+    'VariableNames', {'dataset', 'count', 'weight'});
+rw = rw .* dw;
 end
 
 % =====================================================================
