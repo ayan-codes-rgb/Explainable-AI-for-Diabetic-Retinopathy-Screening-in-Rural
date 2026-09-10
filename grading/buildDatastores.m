@@ -39,6 +39,7 @@ p.FunctionName = 'buildDatastores';
 p.addParameter('InputSize', [224 224], @(x) isnumeric(x) && numel(x) == 2);
 p.addParameter('Task', 'grade', @(x) ischar(x) || isstring(x));
 p.addParameter('Augment', true, @(x) islogical(x) && isscalar(x));
+p.addParameter('Enhance', 'none', @(x) ischar(x) || isstring(x));
 p.parse(varargin{:});
 opt = p.Results;
 
@@ -48,7 +49,7 @@ if ~ismember(task, {'grade', 'referable'})
 end
 
 inputSize = double(opt.InputSize(:)');
-readFcn   = makeFundusReadFcn('TargetSize', inputSize);
+readFcn   = makeGradingReadFcn('TargetSize', inputSize, 'Enhance', opt.Enhance);
 
 if task == "grade"
     classes = categorical(0:4, 0:4, {'0','1','2','3','4'});
@@ -56,7 +57,8 @@ else
     classes = categorical([0 1], [0 1], {'nonreferable','referable'});
 end
 
-S = struct('inputSize', inputSize, 'task', task, 'classes', classes);
+S = struct('inputSize', inputSize, 'task', task, 'classes', classes, ...
+           'enhance', lower(char(opt.Enhance)));
 
 for nm = ["train" "val" "test"]
     T = loadSplit(char(nm), roots);
@@ -75,11 +77,18 @@ for nm = ["train" "val" "test"]
         % so reflections and modest rotations produce plausible retinas.
         % Keep it mild -- heavy warping destroys lesion shape, which is the
         % feature that separates a microaneurysm from a haemorrhage.
+        % A fundus photo has no canonical orientation beyond which eye it is,
+        % so full 360-degree rotation is legitimate here and gives far more
+        % variety than the +/-15 degrees a natural-image pipeline would use.
+        % Brightness and contrast jitter simulates the camera-to-camera
+        % variation that is the whole point of the deployment scenario.
         aug = imageDataAugmenter( ...
-            'RandXReflection', true, ...
-            'RandYReflection', true, ...
-            'RandRotation',    [-15 15], ...
-            'RandScale',       [0.9 1.1]);
+            'RandXReflection',      true, ...
+            'RandYReflection',      true, ...
+            'RandRotation',         [0 360], ...
+            'RandScale',            [0.85 1.15], ...
+            'RandXTranslation',     [-10 10], ...
+            'RandYTranslation',     [-10 10]);
         ds = augmentedImageDatastore(inputSize, imds, 'DataAugmentation', aug);
     else
         ds = augmentedImageDatastore(inputSize, imds);
@@ -88,7 +97,7 @@ for nm = ["train" "val" "test"]
     S.(nm) = struct('ds', ds, 'imds', imds, 'labels', Y, 'tbl', T);
 end
 
-fprintf('buildDatastores: task=%s  input=%dx%d  train=%d  val=%d  test=%d\n', ...
-    task, inputSize(1), inputSize(2), ...
+fprintf('buildDatastores: task=%s  input=%dx%d  enhance=%s  train=%d  val=%d  test=%d\n', ...
+    task, inputSize(1), inputSize(2), S.enhance, ...
     numel(S.train.labels), numel(S.val.labels), numel(S.test.labels));
 end

@@ -72,6 +72,7 @@ p.addParameter('Refresh',    false);
 p.addParameter('BatchSize',  32);
 p.addParameter('DomainWeight', 'balanced');
 p.addParameter('CalibrateOn',  'IDRiD');
+p.addParameter('Enhance',      'none');
 p.parse(varargin{:});
 opt = p.Results;
 
@@ -84,7 +85,8 @@ fprintf('\n=== DR grading baseline ===\n');
 
 % ---- 1. data ---------------------------------------------------------
 S = buildDatastores(roots, 'InputSize', opt.InputSize, ...
-                           'Task', opt.Task, 'Augment', false);
+                           'Task', opt.Task, 'Augment', false, ...
+                           'Enhance', opt.Enhance);
 
 % ---- 2. features (cached) -------------------------------------------
 cacheDir = fullfile(fileparts(mfilename('fullpath')), 'cache');
@@ -200,7 +202,8 @@ fprintf('NOTE: test n=%d, so one image moves the number by %.1f points.\n\n', n,
 
 R = struct('model', mdl, 'threshold', thr, 'targetReached', reached, ...
            'thresholdMode', mode, 'tunedOn', tuneOn, ...
-           'backbone', opt.Backbone, 'task', opt.Task, 'classWeights', wTable, ...
+           'backbone', opt.Backbone, 'task', opt.Task, 'enhance', lower(char(opt.Enhance)), ...
+           'classWeights', wTable, ...
            'tuning', struct('sensitivity', sensTune, 'specificity', specTune), ...
            'test',   struct('sensitivity', sensT,    'specificity', specT), ...
            'features', struct('dim', size(F.train,2), 'layer', featLayer), ...
@@ -211,9 +214,15 @@ end
 
 % =====================================================================
 function f = iCacheFile(splitName, opt, cacheDir)
-sz = opt.InputSize;
-f  = fullfile(cacheDir, sprintf('feat_%s_%dx%d_%s.mat', ...
-        lower(char(opt.Backbone)), sz(1), sz(2), splitName));
+sz  = opt.InputSize;
+enh = lower(char(opt.Enhance));
+if strcmp(enh, 'none')
+    tag = '';
+else
+    tag = ['_' enh];
+end
+f = fullfile(cacheDir, sprintf('feat_%s_%dx%d%s_%s.mat', ...
+        lower(char(opt.Backbone)), sz(1), sz(2), tag, splitName));
 end
 
 function [F, hit] = iCachedFeatures(S, splitName, opt, cacheDir)
