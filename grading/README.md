@@ -70,3 +70,63 @@ threshold to accept more false positives. Pick the threshold on `val` with
 4. Threshold tuning on `val` for the >90%/85% target
 5. Ablation vs the baseline in step 1 -- this is the comparison the problem
    statement asks for
+
+## Day 1 — what to run
+
+```matlab
+cd 'C:\\Users\\c7849\\OneDrive\\Desktop\\SIH Diabetic Retinopathy'
+addpath(genpath('common')); addpath(genpath('grading'))
+root = 'C:\\Users\\c7849\\Downloads\\dr-data\\IDRiD\\B. Disease Grading';
+
+S = buildDatastores(root);            % datastores wired to the fixed split
+classWeights(S.train.labels)          % see the imbalance and the weights
+R = runBaseline(root);                % frozen backbone + linear classifier
+```
+
+`runBaseline` prints validation- and test-set sensitivity/specificity for
+referable DR and returns the trained model plus the tuned threshold.
+
+### Files
+
+| file | what it does |
+|---|---|
+| `loadSplit.m` | reads the fixed train/val/test split |
+| `buildDatastores.m` | datastores through `loadFundus`, augmentation on train only |
+| `classWeights.m` | per-class loss weights, with the reasoning |
+| `runBaseline.m` | CPU baseline: frozen backbone -> features -> linear classifier |
+
+### Backbone choice
+
+**ResNet-18** at 224x224, used as a frozen feature extractor.
+
+Not ResNet-50: this machine has an AMD GPU and MATLAB is CUDA-only, so
+everything runs on CPU until the GPU machine is confirmed. ResNet-18 is
+~4x cheaper and, as a frozen extractor, the difference in feature quality
+is small compared with the difference in how many experiments you get to run.
+
+Feature extraction rather than fine-tuning, for the same reason: one forward
+pass over the data, then seconds per experiment. That is what lets you tune
+class weights and the decision threshold, which is what actually moves
+sensitivity.
+
+Fine-tuning is step 2, once there is a GPU. The baseline then becomes the
+ablation comparison the problem statement asks for.
+
+### Class balancing
+
+Default is `inverse-sqrt`, not full inverse frequency. Full inverse
+frequency on a class with 17 training images makes each of those images
+enormously influential and the model memorises them.
+
+Weight grade 3, not grade 0. On IDRiD+APTOS combined, grade 3 (severe NPDR)
+is the scarcest class at 6.8% -- and it is on the *referable* side, so
+errors there cost **sensitivity** (>90% target). Grade 1 costs
+**specificity** (>85%). The errors are not equally expensive.
+
+### Known unknowns
+
+`runBaseline` has not been executed -- no MATLAB on the machine that wrote
+it. The logic is sound but expect one round of fixes, most likely around
+the pretrained-network API (`imagePretrainedNetwork` vs `resnet18`) or the
+feature layer name. Both are handled defensively and error with a message
+naming the fix.
