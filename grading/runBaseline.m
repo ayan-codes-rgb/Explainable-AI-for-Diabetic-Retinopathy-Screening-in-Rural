@@ -94,7 +94,7 @@ if ~isfolder(cacheDir), mkdir(cacheDir); end
 
 net = [];  featLayer = '';
 F = struct();  tAll = tic;
-for nm = ["train" "val" "test"]
+for nm = ["train" "val" "test" "test_aptos"]
     [F.(nm), hit] = iCachedFeatures(S, char(nm), opt, cacheDir);
     if ~hit
         if isempty(net)
@@ -178,7 +178,14 @@ switch mode
         tuneDs    = S.val.tbl.dataset;
 end
 
-% ---- 4. single test evaluation --------------------------------------
+% ---- 4. evaluation on both held-out sets ----------------------------
+% Two test sets on purpose. IDRiD-103 is the benchmark that matters -- Indian
+% cameras, expert consensus grades -- but with 64 positives and 39 negatives
+% its AUC standard error is ~0.036, so it cannot resolve the differences
+% between model variants (six configurations all landed within 0.042 of each
+% other, i.e. inside the noise). test_aptos has 275 images and roughly half
+% that error, so it can actually tell whether a change helped. Report IDRiD;
+% steer by test_aptos.
 [~, ~, ~, Pt] = predict(mdl, F.test);
 if size(Pt, 2) ~= numel(classes)
     error('runBaseline:posteriorShape', ...
@@ -197,8 +204,17 @@ fprintf('TUNING  sensitivity %5.1f%%   specificity %5.1f%%   (n=%d)\n', ...
     100*sensTune, 100*specTune, numel(yTune));
 fprintf('TEST    sensitivity %5.1f%%   specificity %5.1f%%   (n=%d, IDRiD only)\n', ...
     100*sensT, 100*specT, n);
+
+
+% second held-out set
+[~, ~, ~, Pa] = predict(mdl, F.test_aptos);
+yAp = S.test_aptos.labels == posName;
+sAp = Pa(:, posCol);
+fprintf('APTOS   sensitivity %5.1f%%   specificity %5.1f%%   (n=%d, steering set)\n', ...
+    100*mean(sAp(yAp) >= thr), 100*mean(sAp(~yAp) < thr), numel(yAp));
 fprintf('targets: sensitivity >90%%, specificity >85%%\n');
-fprintf('NOTE: test n=%d, so one image moves the number by %.1f points.\n\n', n, 100/n);
+fprintf('NOTE: IDRiD test n=%d -> AUC std-error ~0.036, too coarse to compare\n', n);
+fprintf('      variants. test_aptos n=%d -> ~0.022. Steer by that one.\n\n', numel(yAp));
 
 R = struct('model', mdl, 'threshold', thr, 'targetReached', reached, ...
            'thresholdMode', mode, 'tunedOn', tuneOn, ...
@@ -209,7 +225,8 @@ R = struct('model', mdl, 'threshold', thr, 'targetReached', reached, ...
            'features', struct('dim', size(F.train,2), 'layer', featLayer), ...
            'scores', struct('positiveClass', posName, ...
                 'val',  struct('score', tuneScore, 'truth', yTune, 'dataset', tuneDs), ...
-                'test', struct('score', sTest,     'truth', yTest, 'dataset', S.test.tbl.dataset)));
+                'test', struct('score', sTest, 'truth', yTest, 'dataset', S.test.tbl.dataset), ...
+                'test_aptos', struct('score', sAp, 'truth', yAp, 'dataset', S.test_aptos.tbl.dataset)));
 end
 
 % =====================================================================

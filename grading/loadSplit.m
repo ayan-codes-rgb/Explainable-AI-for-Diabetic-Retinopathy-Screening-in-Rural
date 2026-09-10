@@ -3,6 +3,7 @@ function T = loadSplit(splitName, roots, varargin)
 %
 %   T = LOADSPLIT()                              every row, no file paths
 %   T = LOADSPLIT('train', roots)                training rows, with paths
+%   Splits: 'train' | 'val' | 'test' (IDRiD, the benchmark) | 'test_aptos'
 %   T = LOADSPLIT({'train','val'}, roots)        more than one split
 %   T = LOADSPLIT('val', roots, 'Dataset','IDRiD')   one dataset only
 %
@@ -57,7 +58,7 @@ T.referable = logical(T.referable);
 % ---- filter by split -------------------------------------------------
 if nargin >= 1 && ~isempty(splitName)
     want  = string(splitName);
-    valid = ["train" "val" "test"];
+    valid = ["train" "val" "test" "test_aptos"];
     bad   = want(~ismember(want, valid));
     if ~isempty(bad)
         error('loadSplit:badSplit', 'Unknown split "%s". Valid: train, val, test.', bad(1));

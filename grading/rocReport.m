@@ -43,9 +43,10 @@ if ~isfield(R, 'scores')
          'Re-run:  R = runBaseline(root);  (features are cached, takes seconds).']);
 end
 
-splits = {'val', 'test'};
-COL    = [0.184 0.435 0.816;    % val   #2f6fd0
-          0.878 0.482 0.094];   % test  #e07b18
+splits = {'val', 'test', 'test_aptos'};
+COL    = [0.184 0.435 0.816;    % val         #2f6fd0
+          0.878 0.482 0.094;    % test        #e07b18
+          0.298 0.616 0.353];   % test_aptos  #4c9d5a
 GRID   = [0.62 0.62 0.60];
 INK    = [0.15 0.15 0.15];
 
@@ -53,6 +54,7 @@ rows = {};
 curves = struct();
 
 fprintf('\n=== ROC / AUC ===\n');
+splits = splits(cellfun(@(nm) isfield(R.scores, nm), splits));
 for k = 1:numel(splits)
     nm = splits{k};
     y  = logical(R.scores.(nm).truth);

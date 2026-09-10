@@ -60,7 +60,7 @@ end
 S = struct('inputSize', inputSize, 'task', task, 'classes', classes, ...
            'enhance', lower(char(opt.Enhance)));
 
-for nm = ["train" "val" "test"]
+for nm = ["train" "val" "test" "test_aptos"]
     T = loadSplit(char(nm), roots);
 
     if task == "grade"
@@ -97,7 +97,9 @@ for nm = ["train" "val" "test"]
     S.(nm) = struct('ds', ds, 'imds', imds, 'labels', Y, 'tbl', T);
 end
 
-fprintf('buildDatastores: task=%s  input=%dx%d  enhance=%s  train=%d  val=%d  test=%d\n', ...
+fprintf(['buildDatastores: task=%s  input=%dx%d  enhance=%s\n' ...
+         '  train=%d  val=%d  test(IDRiD)=%d  test_aptos=%d\n'], ...
     task, inputSize(1), inputSize(2), S.enhance, ...
-    numel(S.train.labels), numel(S.val.labels), numel(S.test.labels));
+    numel(S.train.labels), numel(S.val.labels), ...
+    numel(S.test.labels), numel(S.test_aptos.labels));
 end
