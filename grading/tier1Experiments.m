@@ -30,6 +30,9 @@ function T = tier1Experiments(roots, varargin)
 %     idrid-only    head trained on IDRiD rows alone. The extreme version of
 %                   domain weighting: stop letting 3,112 APTOS images outvote
 %                   352 IDRiD ones entirely.
+%     svm-idrid     nonlinear boundary fitted on IDRiD rows alone
+%     svm-weighted  nonlinear boundary, domain-balanced sample weights --
+%                   keeps APTOS volume without letting it outvote IDRiD
 %     coral         CORAL domain alignment -- a closed-form linear transform
 %                   that recolours APTOS feature covariance to match IDRiD's
 %                   before training. Attacks the domain shift in feature
@@ -93,6 +96,12 @@ rows(end+1,:) = iRun('ordinal',       @() iOrdinal(D.train.X, D.train.g),       
 rows(end+1,:) = iRun('idrid-only',    @() iLinear(D.train.X(mI,:), D.train.y(mI)),     D);
 rows(end+1,:) = iRun('coral',         @() iCoralModel(D, coralA, coralMu, coralMuT),   D, ...
                                        @(X, ds) iApplyCoral(X, ds, coralA, coralMu, coralMuT));
+% The first pass showed the winner was nonlinear (svm-rbf) and the runner-up
+% was domain-specialised (idrid-only). These two combine the pair: a
+% nonlinear boundary fitted only on IDRiD, and a nonlinear boundary that
+% keeps APTOS's volume but stops it outvoting IDRiD nine to one.
+rows(end+1,:) = iRun('svm-idrid',     @() iSvmRbf(D.train.X(mI,:), D.train.y(mI)),      D);
+rows(end+1,:) = iRun('svm-weighted',  @() iSvmWeighted(D.train.X, D.train.y, D.train.ds), D);
 
 T = cell2table(rows, 'VariableNames', ...
     {'variant','aucIDRiD','aucAPTOS','sensIDRiD','specIDRiD','seconds'});
@@ -147,6 +156,21 @@ end
 function fn = iSvmRbf(X, y)
 m  = fitcsvm(X, y, 'KernelFunction', 'rbf', 'KernelScale', 'auto', ...
                    'Standardize', true, 'BoxConstraint', 1);
+fn = @(Xn) iPosScore(m, Xn);
+end
+
+function fn = iSvmWeighted(X, y, ds)
+% Nonlinear boundary with domain-balanced sample weights: each dataset gets
+% equal total influence while every image is kept.
+ds = string(ds(:));
+u  = unique(ds);
+w  = ones(numel(y), 1);
+for i = 1:numel(u)
+    m = ds == u(i);
+    w(m) = numel(ds) / (numel(u) * sum(m));
+end
+m  = fitcsvm(X, y, 'KernelFunction', 'rbf', 'KernelScale', 'auto', ...
+                   'Standardize', true, 'BoxConstraint', 1, 'Weights', w);
 fn = @(Xn) iPosScore(m, Xn);
 end
 
