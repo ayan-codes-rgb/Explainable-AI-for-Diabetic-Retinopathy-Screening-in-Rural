@@ -33,6 +33,13 @@ function T = tier1Experiments(roots, varargin)
 %     svm-idrid     nonlinear boundary fitted on IDRiD rows alone
 %     svm-weighted  nonlinear boundary, domain-balanced sample weights --
 %                   keeps APTOS volume without letting it outvote IDRiD
+%     svm-l2norm    RBF on unit-length features -- the kernel is a distance,
+%                   so uneven embedding magnitudes distort it
+%     svm-tuned     Bayesian search over BoxConstraint and KernelScale; the
+%                   kernel won on defaults that were never examined
+%     svm-l2-tuned  both of the above
+%     ensemble      svm-rbf + boosted trees + IDRiD-only SVM, standardised
+%                   on training scores and averaged
 %     coral         CORAL domain alignment -- a closed-form linear transform
 %                   that recolours APTOS feature covariance to match IDRiD's
 %                   before training. Attacks the domain shift in feature
@@ -102,6 +109,13 @@ rows(end+1,:) = iRun('coral',         @() iCoralModel(D, coralA, coralMu, coralM
 % keeps APTOS's volume but stops it outvoting IDRiD nine to one.
 rows(end+1,:) = iRun('svm-idrid',     @() iSvmRbf(D.train.X(mI,:), D.train.y(mI)),      D);
 rows(end+1,:) = iRun('svm-weighted',  @() iSvmWeighted(D.train.X, D.train.y, D.train.ds), D);
+% Second pass. The RBF kernel won on completely untuned settings, so the
+% obvious unexploited knobs are the kernel's own hyperparameters and the
+% scale of the features it measures distances between.
+rows(end+1,:) = iRun('svm-l2norm',    @() iSvmRbf(iL2(D.train.X), D.train.y),          D, @(X,~) iL2(X));
+rows(end+1,:) = iRun('svm-tuned',     @() iSvmTuned(D.train.X, D.train.y),             D);
+rows(end+1,:) = iRun('svm-l2-tuned',  @() iSvmTuned(iL2(D.train.X), D.train.y),        D, @(X,~) iL2(X));
+rows(end+1,:) = iRun('ensemble',      @() iEnsemble(D.train.X, D.train.y, D.train.ds), D);
 
 T = cell2table(rows, 'VariableNames', ...
     {'variant','aucIDRiD','aucAPTOS','sensIDRiD','specIDRiD','seconds'});
@@ -157,6 +171,62 @@ function fn = iSvmRbf(X, y)
 m  = fitcsvm(X, y, 'KernelFunction', 'rbf', 'KernelScale', 'auto', ...
                    'Standardize', true, 'BoxConstraint', 1);
 fn = @(Xn) iPosScore(m, Xn);
+end
+
+function Xn = iL2(X)
+%IL2 Unit-length rows.
+%   An RBF kernel measures distance between feature vectors, so a channel
+%   with a large magnitude dominates the distance regardless of how much it
+%   actually says about the label. CNN embeddings have wildly uneven
+%   magnitudes; projecting every image onto the unit sphere makes the kernel
+%   compare directions instead. Standard practice with deep features.
+n  = vecnorm(X, 2, 2);
+Xn = X ./ max(n, eps);
+end
+
+function fn = iSvmTuned(X, y)
+%ISVMTUNED Bayesian search over BoxConstraint and KernelScale.
+%   Everything so far used KernelScale='auto' and BoxConstraint=1 -- the
+%   defaults, never examined. The search cross-validates inside the training
+%   set only, so no test information leaks.
+m = fitcsvm(X, y, 'KernelFunction', 'rbf', 'Standardize', true, ...
+    'OptimizeHyperparameters', {'BoxConstraint', 'KernelScale'}, ...
+    'HyperparameterOptimizationOptions', struct( ...
+        'ShowPlots', false, 'Verbose', 0, 'MaxObjectiveEvaluations', 20, ...
+        'Kfold', 5, 'UseParallel', true, ...
+        'AcquisitionFunctionName', 'expected-improvement-plus'));
+fn = @(Xn) iPosScore(m, Xn);
+end
+
+function fn = iEnsemble(X, y, ds)
+%IENSEMBLE Average three heads with different inductive biases.
+%   svm-rbf, boosted trees and an IDRiD-only SVM disagree in different
+%   places, so averaging them cancels some of each one's idiosyncratic
+%   errors. Scores live on different scales, so each is standardised using
+%   statistics fitted on the TRAINING scores -- which keeps the ensemble
+%   deployable on a single image, unlike rank averaging.
+mI = string(ds(:)) == "IDRiD";
+m1 = fitcsvm(X, y, 'KernelFunction','rbf', 'KernelScale','auto', ...
+                   'Standardize',true, 'BoxConstraint',1);
+m2 = fitcensemble(X, y, 'Method','LogitBoost', 'NumLearningCycles',200, ...
+        'Learners', templateTree('MaxNumSplits',24), 'LearnRate',0.1);
+m3 = fitcsvm(X(mI,:), y(mI), 'KernelFunction','rbf', 'KernelScale','auto', ...
+                   'Standardize',true, 'BoxConstraint',1);
+ms = {m1, m2, m3};
+mu = zeros(1,3); sd = ones(1,3);
+for i = 1:3
+    t = iPosScore(ms{i}, X);
+    mu(i) = mean(t); sd(i) = max(std(t), eps);
+end
+fn = @(Xn) iEnsScore(ms, mu, sd, Xn);
+end
+
+function s = iEnsScore(ms, mu, sd, X)
+S = zeros(size(X,1), numel(ms));
+for i = 1:numel(ms)
+    S(:,i) = (iPosScore(ms{i}, X) - mu(i)) / sd(i);
+end
+s = mean(S, 2);
 end
 
 function fn = iSvmWeighted(X, y, ds)
