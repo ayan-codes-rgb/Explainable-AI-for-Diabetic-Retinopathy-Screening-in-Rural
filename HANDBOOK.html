@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light dark}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>DR Screening Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+:root{
+  --paper:#f4f5f2; --surface:#fbfbfa; --sunken:#eceee8;
+  --ink:#1b2320; --ink2:#4b554f; --ink3:#7d877f;
+  --rule:#d8ddd5; --rule-soft:#e6eae2;
+  --accent:#b4620f; --accent-ink:#8d4c0b; --accent-soft:#f6e7d6;
+  --crimson:#8e2f33; --crimson-soft:#f6e2e2;
+  --green:#2f6b47; --green-soft:#e2efe6;
+  --amber:#8f6410; --amber-soft:#f7ecd5;
+  --shadow:0 1px 2px rgba(27,35,32,.06);
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#131917; --surface:#1b2320; --sunken:#101514;
+    --ink:#e9ece7; --ink2:#a7b1ab; --ink3:#76807a;
+    --rule:#2b3531; --rule-soft:#222b28;
+    --accent:#e08a3c; --accent-ink:#eda153; --accent-soft:#31241a;
+    --crimson:#d98387; --crimson-soft:#2f1d1e;
+    --green:#74bf90; --green-soft:#182a20;
+    --amber:#d8ab4e; --amber-soft:#2b2315;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131917; --surface:#1b2320; --sunken:#101514;
+  --ink:#e9ece7; --ink2:#a7b1ab; --ink3:#76807a;
+  --rule:#2b3531; --rule-soft:#222b28;
+  --accent:#e08a3c; --accent-ink:#eda153; --accent-soft:#31241a;
+  --crimson:#d98387; --crimson-soft:#2f1d1e;
+  --green:#74bf90; --green-soft:#182a20;
+  --amber:#d8ab4e; --amber-soft:#2b2315;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:var(--body); font-size:17px; line-height:1.62;
+  margin:0; padding:0 20px; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:820px;margin:0 auto;padding-block:0 96px}
+
+/* ---------- masthead ---------- */
+.mast{padding-block:56px 30px;border-bottom:2px solid var(--ink)}
+.eyebrow{
+  font-family:var(--mono);font-size:11.5px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink);
+  margin:0 0 18px
+}
+h1{
+  font-family:var(--disp);font-weight:700;font-size:clamp(32px,6vw,46px);
+  line-height:1.05;letter-spacing:-.022em;margin:0 0 14px;text-wrap:balance
+}
+.dek{font-size:19px;color:var(--ink2);margin:0;max-width:62ch;text-wrap:pretty}
+.metaline{
+  display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:26px;
+  font-family:var(--mono);font-size:12.5px;color:var(--ink3)
+}
+.metaline b{color:var(--ink2);font-weight:500}
+.metaline a{color:var(--accent-ink)}
+
+/* ---------- nav ---------- */
+nav.toc{
+  position:sticky;top:0;z-index:20;background:var(--paper);
+  border-bottom:1px solid var(--rule);
+  padding-block:11px;margin-bottom:8px
+}
+nav.toc ul{display:flex;flex-wrap:wrap;gap:4px 18px;list-style:none;margin:0;padding:0}
+nav.toc a{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink3);text-decoration:none;
+  border-bottom:1px solid transparent;padding-bottom:1px
+}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent-ink);border-bottom-color:var(--accent)}
+
+/* ---------- structure ---------- */
+section{padding-block:46px 0}
+h2{
+  font-family:var(--disp);font-weight:700;font-size:27px;letter-spacing:-.016em;
+  margin:0 0 6px;text-wrap:balance;scroll-margin-top:64px
+}
+h2 .num{
+  font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent);
+  letter-spacing:.06em;display:block;margin-bottom:7px
+}
+h3{
+  font-family:var(--disp);font-weight:600;font-size:19px;letter-spacing:-.01em;
+  margin:32px 0 8px;text-wrap:balance
+}
+h4{
+  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink3);margin:24px 0 8px
+}
+p{margin:0 0 15px;max-width:68ch}
+ul,ol{margin:0 0 15px;padding-left:22px;max-width:68ch}
+li{margin-bottom:7px}
+a{color:var(--accent-ink)}
+strong{font-weight:600}
+hr{border:0;border-top:1px solid var(--rule);margin:40px 0}
+
+code{
+  font-family:var(--mono);font-size:.855em;
+  background:var(--sunken);padding:1.5px 5px;border-radius:3px;
+  border:1px solid var(--rule-soft)
+}
+pre{
+  font-family:var(--mono);font-size:13px;line-height:1.6;
+  background:var(--sunken);border:1px solid var(--rule);
+  border-left:3px solid var(--accent);
+  padding:14px 16px;border-radius:4px;overflow-x:auto;margin:0 0 16px
+}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 18px;border:1px solid var(--rule);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12.5px}
+th{
+  text-align:left;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  font-size:10.5px;color:var(--ink3);padding:10px 13px;
+  background:var(--sunken);border-bottom:1px solid var(--rule);white-space:nowrap
+}
+td{padding:9px 13px;border-bottom:1px solid var(--rule-soft);vertical-align:top;color:var(--ink2)}
+tr:last-child td{border-bottom:0}
+td.n{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+td b{color:var(--ink);font-weight:600}
+
+/* ---------- callouts ---------- */
+.note{
+  border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:14px 18px;border-radius:0 4px 4px 0;margin:0 0 18px
+}
+.warn{border-left-color:var(--crimson);background:var(--crimson-soft)}
+.note p:last-child{margin-bottom:0}
+.note .lbl{
+  font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:5px
+}
+.warn .lbl{color:var(--crimson)}
+
+/* ---------- status pills ---------- */
+.pill{
+  font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 8px;border-radius:3px;white-space:nowrap
+}
+.p-done{background:var(--green-soft);color:var(--green)}
+.p-now{background:var(--amber-soft);color:var(--amber)}
+.p-block{background:var(--crimson-soft);color:var(--crimson)}
+
+/* ---------- module blocks ---------- */
+.mod{
+  background:var(--surface);border:1px solid var(--rule);border-radius:5px;
+  padding:26px 26px 22px;margin-bottom:22px;box-shadow:var(--shadow)
+}
+.mod-head{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--rule)
+}
+.mod-id{
+  font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-.02em;
+  color:var(--accent);line-height:1
+}
+.mod-title{font-family:var(--disp);font-weight:600;font-size:19px;letter-spacing:-.01em;flex:1;min-width:180px}
+.mod dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0 0 18px;font-size:15px}
+.mod dt{
+  font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink3);padding-top:5px
+}
+.mod dd{margin:0;color:var(--ink2)}
+.mod dd code{font-size:12.5px}
+.mod h4:first-of-type{margin-top:0}
+.mod p,.mod ul,.mod ol{max-width:none}
+
+/* ---------- chart ---------- */
+figure{margin:0 0 20px}
+figcaption{font-size:14px;color:var(--ink3);margin-top:8px;max-width:66ch}
+svg{display:block;width:100%;height:auto}
+
+@media (max-width:560px){
+  body{font-size:16px;padding:0 16px}
+  .mod{padding:20px 18px 16px}
+  .mod dl{grid-template-columns:1fr;gap:2px 0}
+  .mod dt{padding-top:10px}
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">SIH · MathWorks problem statement · Team handbook</p>
+  <h1>Explainable AI for Diabetic Retinopathy Screening</h1>
+  <p class="dek">Everything built so far, how the shared code works, and exactly what each of the six of us owns from here. Read your own module section in full before writing a line of MATLAB.</p>
+  <div class="metaline">
+    <span><b>Updated</b> 11 Sep 2026</span>
+    <span><b>POC due</b> 15 Sep</span>
+    <span><b>Final</b> 30 Sep</span>
+    <span><b>Repo</b> <a href="https://github.com/ayan-codes-rgb/Explainable-AI-for-Diabetic-Retinopathy-Screening-in-Rural">ayan-codes-rgb/Explainable-AI…</a></span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <ul>
+    <li><a href="#start">Start here</a></li>
+    <li><a href="#rules">The contract</a></li>
+    <li><a href="#data">The data</a></li>
+    <li><a href="#done">What's done</a></li>
+    <li><a href="#findings">Findings</a></li>
+    <li><a href="#modules">Your module</a></li>
+    <li><a href="#plan">What's left</a></li>
+  </ul>
+</nav>
+
+<section id="start">
+  <h2><span class="num">§1</span>Start here — ten minutes to working</h2>
+
+  <p>Everything below assumes you have MATLAB R2026a with Image Processing, Computer Vision, Deep Learning, Medical Imaging, Statistics &amp; ML, and Simulink. Run <code>ver</code> to check. If a toolbox is missing, request it today — licence requests take days.</p>
+
+  <h4>1 · Clone and branch</h4>
+<pre><code>git clone https://github.com/ayan-codes-rgb/Explainable-AI-for-Diabetic-Retinopathy-Screening-in-Rural.git
+cd Explainable-AI-for-Diabetic-Retinopathy-Screening-in-Rural
+git checkout -b &lt;your-branch&gt;</code></pre>
+
+  <p>Branch name = the folder you own. Lowercase, no prefixes, no dates:</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Member</th><th>Folder</th><th>Branch</th></tr></thead>
+    <tbody>
+      <tr><td>M1</td><td><code>quality/</code></td><td>quality</td></tr>
+      <tr><td>M2</td><td><code>segmentation/</code></td><td>segmentation</td></tr>
+      <tr><td>M3</td><td><code>lesions/</code></td><td>lesions</td></tr>
+      <tr><td>M4 — Joseph</td><td><code>grading/</code></td><td>grading</td></tr>
+      <tr><td>M5</td><td><code>explainability/</code></td><td>explainability</td></tr>
+      <tr><td>M6</td><td><code>simulink/</code>, <code>integration/</code></td><td>simulink</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note">
+    <span class="lbl">A branch is not a folder</span>
+    <p>Your branch contains <em>all eight</em> folders — it's a complete copy of the project with your changes on top. This trips up nearly everyone. You work inside your own folder; the branch just keeps your unfinished work off <code>main</code>.</p>
+  </div>
+
+  <h4>2 · Get the datasets</h4>
+  <p>Datasets are on the shared Drive (<code>Diabetic retinopathy(SIH)</code>), never in git. Download and unzip them <strong>outside</strong> any OneDrive-synced folder — 10 GB into OneDrive will destroy your quota and your bandwidth. Recommended layout:</p>
+<pre><code>C:\dr-data\
+├── IDRiD\
+│   ├── A. Segmentation\
+│   ├── B. Disease Grading\
+│   └── C. Localization\
+└── APTOS\
+    ├── train_images\
+    └── train.csv</code></pre>
+
+  <h4>3 · Verify the shared loader runs</h4>
+<pre><code>cd '&lt;your repo folder&gt;'
+addpath(genpath('common'))
+test_loadFundus()</code></pre>
+  <p>You should see four <code>ok</code> lines and <code>SYNTHETIC TEST PASSED</code>. Then run it against real images to see the montage:</p>
+<pre><code>test_loadFundus('C:\dr-data\IDRiD\B. Disease Grading\1. Original Images\a. Training Set')</code></pre>
+  <p>Look at the figure. Every retina should be centred, square, no black bars, nothing squashed into an ellipse. If it looks wrong on your machine, say so immediately — everything else depends on it.</p>
+
+  <div class="note warn">
+    <span class="lbl">If MATLAB says "Unrecognized function"</span>
+    <p>Your current folder isn't the repo. <code>genpath('common')</code> returns an empty string and <code>addpath</code> silently does nothing. Run <code>pwd</code>, then <code>cd</code> to the repo root first. This has already cost us an hour once.</p>
+  </div>
+</section>
+
+<section id="rules">
+  <h2><span class="num">§2</span>The contract — four rules, none optional</h2>
+
+  <h3>Rule 1 · Never call <code>imread()</code></h3>
+  <p>Every image enters the pipeline through <code>loadFundus()</code> in <code>common/</code>. Not negotiable, and here's why it matters concretely.</p>
+  <p>A colour image is three stacked grids — red, green, blue. In fundus imaging the <strong>green channel carries almost all the signal</strong>: vessels and lesions have their strongest contrast there, red is saturated, blue is noise. So nearly every module has a line like <code>img(:,:,2)</code>. If two of us load images with different channel ordering, one person's "green channel" is silently someone else's blue, their module produces garbage, and <em>nothing throws an error</em>. You find out on integration day.</p>
+  <p>Same story for bit depth (IDRiD grading images are 8-bit JPEG, DRIVE ships 16-bit TIFF — a threshold of <code>0.06</code> means "6% brightness" on one and "keep everything" on the other) and for resolution.</p>
+
+  <h4>What loadFundus guarantees</h4>
+  <div class="tw"><table>
+    <thead><tr><th>Output</th><th>Type</th><th>Guarantee</th></tr></thead>
+    <tbody>
+      <tr><td><b>img</b></td><td>uint8 H×W×3</td><td>RGB order, 0–255, retina centred and square, pixels outside the retina forced to 0</td></tr>
+      <tr><td><b>fovMask</b></td><td>logical H×W</td><td>true inside the retina, same size as <code>img</code></td></tr>
+      <tr><td><b>geom</b></td><td>struct</td><td>record of every geometric operation applied — needed to realign ground truth</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Internally it forces 3-channel RGB uint8, finds the retina, crops the black border away, <strong>pads the crop to a square before resizing</strong> (resizing a 4:3 fundus straight to 512×512 turns the retina into an ellipse and corrupts vessel geometry, lesion shape and optic-disc circularity all at once), then resizes.</p>
+
+  <h3>Rule 2 · Realign your ground truth, always</h3>
+  <p>The loader crops and resizes. Ground truth that doesn't go through the <em>identical</em> transform is misaligned by tens of pixels. It will not error. It will just make every metric you compute wrong, quietly.</p>
+<pre><code>[img, fov, geom] = loadFundus('…/IDRiD_01.jpg');
+
+% pixel masks — IDRiD lesions, DRIVE vessels, optic disc
+maMask = applyFundusGeom(imread('IDRiD_01_MA.tif') &gt; 0, geom);
+
+% coordinates — optic disc centre, fovea centre, MA locations
+odXY   = mapFundusPoints([odX odY], geom);</code></pre>
+  <p>Both functions take the annotation at its <strong>original</strong> resolution and error if you pass a pre-resized one. Masks resize with nearest-neighbour — bilinear would average a 0 next to a 1 into 0.5, a label value that doesn't exist.</p>
+
+  <h3>Rule 3 · Only M1 edits <code>common/</code></h3>
+  <p>Need a change in the loader? Ask. Don't patch it on your branch — you'll be running different preprocessing from everyone else and you won't know it. If you need extra preprocessing for your own module, wrap the loader rather than modifying it; <code>grading/makeGradingReadFcn.m</code> is a worked example of doing exactly that.</p>
+
+  <h3>Rule 4 · Don't commit to <code>main</code></h3>
+  <p>Work on your branch, open a Pull Request when your piece runs. Broken <code>main</code> blocks six people. And never commit anything under <code>data/</code> — <code>.gitignore</code> handles it, but run <code>git status</code> before you commit and look.</p>
+
+  <h3>The shared result struct</h3>
+  <p>Everything integrates into one function, <code>analyzeImage()</code>, returning one struct. Your module fills its own fields. Get the names and types exactly right and integration day is plumbing instead of a rewrite.</p>
+<pre><code>result = analyzeImage(rgbImage);
+
+result.quality           % 'gradable' / 'ungradable' + reason      [M1]
+result.enhancedImage     % post-CLAHE / denoise                    [M1]
+result.opticDisc         % centre + radius                         [M2]
+result.fovea             % centre coords                           [M2]
+result.vesselMask        % binary mask                             [M2]
+result.maList            % [x, y, confidence] per microaneurysm    [M3]
+result.exudateMask       % binary mask                             [M3]
+result.haemorrhageMask   % binary mask                             [M3]
+result.neoFlag           % true/false                              [M3]
+result.drGrade           % 0–4                                     [M4]
+result.referable         % true/false (grade >= 2)                 [M4]
+result.confidence        % calibrated score                        [M4]
+result.gradcamMap        % heatmap                                 [M5]</code></pre>
+</section>
+
+<section id="data">
+  <h2><span class="num">§3</span>The data — what you actually have</h2>
+
+  <p>Two datasets, both pre-labelled by clinicians years ago. <strong>Nobody on this team labels anything.</strong> Grading a fundus image needs medical training; that work is already done and it's why we use public datasets.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Dataset</th><th>Images</th><th>Source</th><th>Ground truth</th></tr></thead>
+    <tbody>
+      <tr><td><b>IDRiD</b></td><td class="n">516</td><td>one eye clinic, Nanded, Maharashtra — one camera, uniform 4288×2848</td><td>DR grade 0–4, macular oedema risk, pixel lesion masks, disc/fovea coordinates</td></tr>
+      <tr><td><b>APTOS 2019</b></td><td class="n">3,662</td><td>Aravind Eye Hospital — technicians travelling to villages, many cameras, wildly variable quality</td><td>DR grade 0–4 only</td></tr>
+    </tbody>
+  </table></div>
+
+  <p><strong>APTOS is the training volume. IDRiD is the ground truth.</strong> APTOS's messiness is not a defect — it <em>is</em> the deployment condition the problem statement describes, and it's what makes M1's quality module demonstrably useful. IDRiD is the only source of pixel-level lesion annotation in the entire project, and it's what lets us claim validation on Indian fundus cameras.</p>
+
+  <h3>IDRiD ships as three separate parts</h3>
+  <p>Same kind of photograph, three different answer keys, packaged so each stands alone.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Part</th><th>Contents</th><th>Who needs it</th></tr></thead>
+    <tbody>
+      <tr><td><b>B. Disease Grading</b></td><td>516 images + CSV with grade 0–4 and macular oedema risk 0–2</td><td>M4</td></tr>
+      <tr><td><b>C. Localization</b></td><td>the <em>same</em> 516 images (byte-identical — verified) + CSVs of optic-disc and fovea centre coordinates</td><td>M2</td></tr>
+      <tr><td><b>A. Segmentation</b></td><td>81 images + 363 hand-traced pixel masks</td><td>M3, and M2 for disc masks</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Inside A. Segmentation — five mask folders</h4>
+  <div class="tw"><table>
+    <thead><tr><th>Folder</th><th>What it is</th><th>Looks like</th><th>Train images with one</th></tr></thead>
+    <tbody>
+      <tr><td>1. Microaneurysms</td><td>weak spots ballooning in capillary walls — the first visible sign of DR</td><td>tiny red dots, a few pixels</td><td class="n">54 / 54</td></tr>
+      <tr><td>2. Haemorrhages</td><td>burst microaneurysms, blood leaked into the retina</td><td>bigger, irregular red blotches</td><td class="n">53 / 54</td></tr>
+      <tr><td>3. Hard Exudates</td><td>leaked fats and proteins left behind</td><td>sharp-edged yellow-white deposits</td><td class="n">54 / 54</td></tr>
+      <tr><td>4. Soft Exudates</td><td>retina starved of blood — an infarct, not a deposit</td><td>fluffy pale smudges, blurry edges</td><td class="n">26 / 54</td></tr>
+      <tr><td>5. Optic Disc</td><td><b>healthy anatomy, not a lesion</b></td><td>the bright circle where the nerve enters</td><td class="n">54 / 54</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="note warn">
+    <span class="lbl">Three traps in this folder</span>
+    <p><strong>Missing soft-exudate files mean "none present", not "unlabelled".</strong> Only 26 of 54 training images have one. Skip those images and you throw away every negative example.</p>
+    <p><strong>A. Segmentation uses different filenames.</strong> Its images are <code>IDRiD_01.jpg</code> (two digits); B and C use <code>IDRiD_001.jpg</code> (three). Zero overlap — verified. You <em>cannot</em> join A's masks to B's grades by filename.</p>
+    <p><strong>The optic disc mask exists to be subtracted.</strong> The disc is bright and yellow-white; so are hard exudates. Any brightness-based exudate detector will flag the optic disc on every single image with high confidence. Standard move: find bright regions → delete anything inside the disc → what remains is exudate. This is why M2's disc work blocks M3's exudate work.</p>
+  </div>
+
+  <h3>Grade distribution — the numbers, measured</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Grade</th><th>IDRiD</th><th>APTOS</th><th>Combined</th><th>% of all</th></tr></thead>
+    <tbody>
+      <tr><td>0 — no DR</td><td class="n">168</td><td class="n">1805</td><td class="n">1973</td><td class="n">47.2%</td></tr>
+      <tr><td>1 — mild NPDR</td><td class="n">25</td><td class="n">370</td><td class="n">395</td><td class="n">9.5%</td></tr>
+      <tr><td>2 — moderate NPDR</td><td class="n">168</td><td class="n">999</td><td class="n">1167</td><td class="n">27.9%</td></tr>
+      <tr><td>3 — severe NPDR</td><td class="n">93</td><td class="n">193</td><td class="n"><b>286</b></td><td class="n"><b>6.8%</b></td></tr>
+      <tr><td>4 — proliferative</td><td class="n">62</td><td class="n">295</td><td class="n">357</td><td class="n">8.5%</td></tr>
+      <tr><td><b>total</b></td><td class="n"><b>516</b></td><td class="n"><b>3662</b></td><td class="n"><b>4178</b></td><td></td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Referable DR (grade ≥ 2) is 62.6% of IDRiD but only 40.6% of APTOS — IDRiD is clinic-collected, APTOS is a screening population. <strong>Grade 3 is the scarcest class</strong> and it sits on the referable side, so errors there cost sensitivity, which carries the tighter &gt;90% target.</p>
+
+  <h4>The 0–4 scale, decoded</h4>
+  <p>NPDR = non-proliferative (damage, no new vessels). PDR = proliferative (the eye has started growing fragile new vessels, which bleed and can detach the retina — this is what actually causes sudden blindness).</p>
+  <ul>
+    <li><strong>0</strong> nothing · <strong>1</strong> microaneurysms only · <strong>2</strong> + haemorrhages or exudates · <strong>3</strong> lots of the above, widespread · <strong>4</strong> new vessels growing</li>
+    <li><strong>Referable = grade ≥ 2.</strong> That single binary call is the entire clinical decision the system exists to make.</li>
+    <li><strong>Sensitivity</strong> = of people who really need referral, what fraction did we catch. Missing one means someone loses their sight — hence &gt;90%.</li>
+    <li><strong>Specificity</strong> = of healthy people, what fraction we correctly left alone. A false alarm costs one wasted appointment — hence the looser &gt;85%.</li>
+  </ul>
+</section>
+
+<section id="done">
+  <h2><span class="num">§4</span>What's already built</h2>
+
+  <div class="tw"><table>
+    <thead><tr><th>Component</th><th>Status</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Repo, branches, <code>.gitignore</code></td><td><span class="pill p-done">Done</span></td><td>folder per module, datasets and MATLAB binaries excluded</td></tr>
+      <tr><td>Integration contract</td><td><span class="pill p-done">Done</span></td><td>result struct documented in the root README and in every module folder</td></tr>
+      <tr><td><code>common/</code> shared loader</td><td><span class="pill p-done">Done</span></td><td>verified running in MATLAB; geometry independently cross-checked in a second language</td></tr>
+      <tr><td>Datasets downloaded + verified</td><td><span class="pill p-done">Done</span></td><td>IDRiD all three parts, APTOS 3,662 images, counts checked against the archives</td></tr>
+      <tr><td>Fixed train/val/test split</td><td><span class="pill p-done">Done</span></td><td><code>grading/split.csv</code> — stratified, committed, never regenerated</td></tr>
+      <tr><td>M4 grading baseline</td><td><span class="pill p-done">Done</span></td><td>frozen backbone + linear classifier, full ROC/AUC tooling</td></tr>
+      <tr><td>M1, M2, M3, M5, M6</td><td><span class="pill p-block">Not started</span></td><td>this document is the brief</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3><code>common/</code> — files and what they do</h3>
+  <div class="tw"><table>
+    <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><code>loadFundus.m</code></td><td><b>the loader</b> — the only entry point for reading an image</td></tr>
+      <tr><td><code>fundusFOVMask.m</code></td><td>retina-vs-black-border mask; useful standalone</td></tr>
+      <tr><td><code>applyFundusGeom.m</code></td><td>replay the loader's geometry onto a mask</td></tr>
+      <tr><td><code>mapFundusPoints.m</code></td><td>replay it onto (x,y) coordinates</td></tr>
+      <tr><td><code>drConfig.m</code></td><td>single source of truth for sizes, thresholds, interpolation</td></tr>
+      <tr><td><code>makeFundusReadFcn.m</code></td><td><code>imageDatastore</code> adapter</td></tr>
+      <tr><td><code>test_loadFundus.m</code></td><td>smoke test — runs with no dataset</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>M4 grading — current result</h3>
+  <p>A frozen ImageNet ResNet-18 used as a feature extractor, with a linear classifier on the 512 activations, trained on APTOS + IDRiD, threshold cross-validated on IDRiD out-of-fold scores.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Evaluation set</th><th>n</th><th>Sensitivity</th><th>Specificity</th><th>AUC</th></tr></thead>
+    <tbody>
+      <tr><td>APTOS holdout</td><td class="n">275</td><td class="n"><b>91.0%</b></td><td class="n"><b>92.7%</b></td><td class="n"><b>0.973</b></td></tr>
+      <tr><td>IDRiD official test</td><td class="n">103</td><td class="n">82.8%</td><td class="n">71.8%</td><td class="n">0.867</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Both targets are met on the APTOS holdout — a genuine held-out set, never trained on and never calibrated on. On IDRiD's official test set they are not. Closing that gap with GPU fine-tuning is M4's remaining work.</p>
+</section>
+
+<section id="findings">
+  <h2><span class="num">§5</span>Findings the whole team should know</h2>
+
+  <h3>Your test set has to be big enough to measure with</h3>
+  <p>Six different model configurations were tried. Here is every IDRiD test AUC they produced, with the measurement error on each:</p>
+
+  <figure>
+    <svg viewBox="0 0 640 290" role="img" aria-label="Six model configurations plotted by IDRiD test AUC, each with an error bar; all intervals overlap heavily.">
+      <g font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--ink3)">
+        <line x1="150" y1="34" x2="150" y2="228" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="277" y1="34" x2="277" y2="228" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="404" y1="34" x2="404" y2="228" stroke="var(--rule)" stroke-width="1"/>
+        <line x1="531" y1="34" x2="531" y2="228" stroke="var(--rule)" stroke-width="1"/>
+        <text x="150" y="248" text-anchor="middle">0.78</text>
+        <text x="277" y="248" text-anchor="middle">0.84</text>
+        <text x="404" y="248" text-anchor="middle">0.90</text>
+        <text x="531" y="248" text-anchor="middle">0.96</text>
+        <text x="340" y="272" text-anchor="middle" fill="var(--ink2)">IDRiD test AUC (95% interval)</text>
+      </g>
+      <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--ink2)">
+        <text x="0" y="48">1 · base</text>
+        <text x="0" y="80">2 · +APTOS</text>
+        <text x="0" y="112">3 · +calib</text>
+        <text x="0" y="144">4 · +weight</text>
+        <text x="0" y="176">5 · 448px</text>
+        <text x="0" y="208">6 · +BenG</text>
+      </g>
+      <g stroke="var(--accent)" stroke-width="2" stroke-linecap="round">
+        <line x1="199" y1="44" x2="467" y2="44"/>
+        <line x1="115" y1="76" x2="383" y2="76"/>
+        <line x1="151" y1="108" x2="419" y2="108"/>
+        <line x1="151" y1="140" x2="419" y2="140"/>
+        <line x1="178" y1="172" x2="446" y2="172"/>
+        <line x1="108" y1="204" x2="376" y2="204"/>
+      </g>
+      <g fill="var(--accent)">
+        <circle cx="333" cy="44" r="4.5"/><circle cx="249" cy="76" r="4.5"/>
+        <circle cx="285" cy="108" r="4.5"/><circle cx="285" cy="140" r="4.5"/>
+        <circle cx="312" cy="172" r="4.5"/><circle cx="242" cy="204" r="4.5"/>
+      </g>
+      <g font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink3)">
+        <text x="478" y="48">0.877</text><text x="394" y="80">0.837</text>
+        <text x="430" y="112">0.854</text><text x="430" y="144">0.854</text>
+        <text x="457" y="176">0.867</text><text x="387" y="208">0.835</text>
+      </g>
+    </svg>
+    <figcaption>Six configurations, one test set of 103 images. Every interval overlaps every other. Six experiments, zero information about which model is better.</figcaption>
+  </figure>
+
+  <p>The spread across all six is 0.042. The measurement error on each single one is ±0.036. <strong>They are the same number.</strong> Days were spent reacting to differences that were pure noise — treating a "drop" as a regression and a "rise" as progress.</p>
+
+  <p>This applies directly to <strong>M2 and M3</strong>, who will validate on <strong>81 images</strong>. That is an even smaller sample. Before you conclude that version B of your detector beats version A, work out whether your test set can actually tell them apart. Report confidence intervals, not bare percentages.</p>
+
+  <h3>Models don't transfer between populations</h3>
+  <p>The grading model scores AUC 0.973 on APTOS-like images and 0.867 on IDRiD. Same model, same day. APTOS is a screening population — half of it obviously normal, easy to separate. IDRiD is clinic-collected, 62% referable, dense with borderline grade-1-vs-2 cases where the whole question is whether small red dots are microaneurysms alone or accompanied by a haemorrhage.</p>
+  <p>This is a real, quantified finding about deployment, and it belongs in the final report and the pitch. It is exactly the failure mode the problem statement warns about with existing AI solutions.</p>
+
+  <h3>Things that made no difference</h3>
+  <p>Worth knowing so nobody repeats them: 10× more training data, 4× resolution, Ben Graham preprocessing, domain weighting, and recalibration <em>all</em> left IDRiD test performance flat. The reason is that the feature extractor was frozen — a network trained on cats and furniture, with no mechanism to learn to look harder at microaneurysms. Sharper inputs don't help a fixed function. Fine-tuning is what unlocks them.</p>
+</section>
+
+<section id="modules">
+  <h2><span class="num">§6</span>Your module</h2>
+  <p>Read your own block completely. Each lists what you own, what data you have, what to build first, what to measure, and the specific things that will waste your time if nobody warns you.</p>
+
+  <div class="mod">
+    <div class="mod-head">
+      <span class="mod-id">M1</span>
+      <span class="mod-title">Image quality assessment &amp; enhancement</span>
+      <span class="pill p-now">Start now</span>
+    </div>
+    <dl>
+      <dt>Owns</dt><dd><code>quality/</code> and <code>common/</code> (you are the only person who edits the loader)</dd>
+      <dt>Fills</dt><dd><code>result.quality</code>, <code>result.enhancedImage</code></dd>
+      <dt>Data</dt><dd>All of APTOS — it's full of genuinely bad images, which is what makes this module demonstrable</dd>
+      <dt>Blocks</dt><dd>Nobody, but everyone depends on your loader staying stable</dd>
+    </dl>
+
+    <h4>Build first</h4>
+    <ol>
+      <li><strong>Focus check</strong> — variance of the Laplacian. A blurred image has little high-frequency energy. Compute it on the green channel.</li>
+      <li><strong>Illumination check</strong> — mean and standard deviation of the green channel. Too dark, too bright, or too uneven all fail.</li>
+      <li><strong>Field-of-view check</strong> — is enough retina actually in frame? <code>fundusFOVMask</code> already gives you the retina; check its area and whether it's clipped at the edges.</li>
+      <li><strong>Enhancement</strong> — <code>adapthisteq</code> for CLAHE, <code>imbilatfilt</code> or <code>wiener2</code> for denoising. Apply to borderline images only; over-processing a good image makes it worse.</li>
+    </ol>
+
+    <div class="note">
+      <span class="lbl">Compute every statistic inside the mask</span>
+      <p><code>loadFundus</code> returns <code>fovMask</code>. Roughly 25–30% of a processed frame is black border. Include it and your illumination mean is dominated by pixels carrying no information, and your focus variance is diluted by a perfectly flat region. Use <code>img(fovMask)</code>, not <code>img(:)</code>.</p>
+    </div>
+
+    <h4>Measure</h4>
+    <p>You have no labelled quality ground truth, so build your own: pick ~50 APTOS images, sort them by eye into gradable / borderline / ungradable, and report agreement between your classifier and that. Say plainly in the report that the reference is your own labelling, not a clinician's.</p>
+
+    <h4>The clinically important part</h4>
+    <p>An ungradable image must be <strong>flagged for recapture</strong>, never silently guessed at. Guessing on an unreadable image is precisely how a screening programme misses someone. Your reject path needs a human-readable reason ("too dark", "out of focus", "retina partially out of frame") because in the field a technician has to act on it.</p>
+  </div>
+
+  <div class="mod">
+    <div class="mod-head">
+      <span class="mod-id">M2</span>
+      <span class="mod-title">Optic disc, fovea, vessels</span>
+      <span class="pill p-now">Start now</span>
+    </div>
+    <dl>
+      <dt>Owns</dt><dd><code>segmentation/</code></dd>
+      <dt>Fills</dt><dd><code>result.opticDisc</code>, <code>result.fovea</code>, <code>result.vesselMask</code></dd>
+      <dt>Data</dt><dd><b>C. Localization</b> — disc and fovea centre coordinates for all 516 images. <b>A. Segmentation folder 5</b> — 81 optic-disc pixel masks.</dd>
+      <dt>Blocks</dt><dd><b>M3.</b> They cannot reliably detect exudates until you can locate the disc.</dd>
+    </dl>
+
+    <h4>Build first</h4>
+    <ol>
+      <li><strong>Optic disc</strong> — the brightest large blob. Try <code>imfindcircles</code> (Hough) on the green channel, or threshold the brightest percentile and take the largest connected component.</li>
+      <li><strong>Fovea</strong> — the darkest region roughly 2–2.5 disc-diameters from the disc, along the vascular arcade. Start with a fixed-distance search and refine.</li>
+      <li><strong>Vessels</strong> — matched filtering with Gaussian-derivative kernels, or top-hat with a disk <code>strel</code>.</li>
+    </ol>
+
+    <h4>Measure — you have real ground truth, use it from day one</h4>
+    <p>Don't eyeball your output. C. Localization gives you the true centres, so you can report <strong>mean Euclidean error in pixels</strong> immediately, plus the fraction of images where you land within one disc radius. That's a real number for the report from your first working version.</p>
+<pre><code>[img, fov, geom] = loadFundus(imgPath);
+trueXY = mapFundusPoints([odX odY], geom);   % from the CSV
+err    = hypot(predXY(1)-trueXY(1), predXY(2)-trueXY(2));</code></pre>
+    <p>Use <code>mapFundusPoints</code> or your coordinates will be in the original 4288×2848 frame while your prediction is in the 512×512 one, and every error you compute will be nonsense.</p>
+
+    <div class="note">
+      <span class="lbl">Why the fovea matters clinically</span>
+      <p>A lesion near the fovea threatens vision far more than the same lesion at the periphery — the fovea is where your reading vision lives. Locating it isn't bookkeeping; it's what lets M5 say "this lesion is sight-threatening" rather than just "a lesion exists".</p>
+    </div>
+  </div>
+
+  <div class="mod">
+    <div class="mod-head">
+      <span class="mod-id">M3</span>
+      <span class="mod-title">Lesion detection</span>
+      <span class="pill p-now">Start now</span>
+    </div>
+    <dl>
+      <dt>Owns</dt><dd><code>lesions/</code></dd>
+      <dt>Fills</dt><dd><code>result.maList</code>, <code>result.exudateMask</code>, <code>result.haemorrhageMask</code>, <code>result.neoFlag</code></dd>
+      <dt>Data</dt><dd><b>A. Segmentation</b> — 81 images, 363 hand-traced masks. This is the only pixel-level ground truth in the whole project.</dd>
+      <dt>Depends on</dt><dd><b>M2's optic disc</b> for exudate detection</dd>
+    </dl>
+
+    <h4>Build first</h4>
+    <ol>
+      <li><strong>Candidate generation</strong> — top-hat morphological filtering (<code>imtophat</code> / <code>imbothat</code>) on the green channel. This finds small bright or dark structures against the background. Candidates only today; classification comes after.</li>
+      <li><strong>Microaneurysm vs noise</strong> — shape, size and contrast features into a simple classifier (<code>fitcsvm</code>). MAs are small, round, dark red.</li>
+      <li><strong>Haemorrhages</strong> — same colour family as MAs, separated by <strong>size and shape irregularity</strong>. That distinction is literally the grade-1 / grade-2 boundary, which is the referral line.</li>
+      <li><strong>Exudates</strong> — colour thresholding in Lab space, <strong>then subtract the optic disc</strong>.</li>
+      <li><strong>Neovascularisation</strong> — abnormal vessel density and tortuosity near the disc or periphery. Genuinely hard even in published work. Do not over-engineer this; a heuristic with an honest caveat is the right answer on this timeline.</li>
+    </ol>
+
+    <h4>Measure</h4>
+    <p>Per-image sensitivity and false positives per image, against the masks. An FROC-style curve if you have time. Report the sample size loudly — 81 images, 54 of them training.</p>
+
+    <div class="note warn">
+      <span class="lbl">The three things that will cost you a day</span>
+      <p><strong>Run every mask through <code>applyFundusGeom</code></strong> with the geom from that image's own <code>loadFundus</code> call. Misalignment doesn't error; it just makes your scores meaningless.</p>
+      <p><strong>Missing soft-exudate mask = no soft exudates.</strong> Not "unlabelled". Treat those 28 images as negatives.</p>
+      <p><strong>A. Segmentation filenames differ from B and C.</strong> <code>IDRiD_01</code> here, <code>IDRiD_001</code> there, no overlap. Never join them by name.</p>
+    </div>
+  </div>
+
+  <div class="mod">
+    <div class="mod-head">
+      <span class="mod-id">M5</span>
+      <span class="mod-title">Explainability &amp; reporting</span>
+      <span class="pill p-now">Start reading now</span>
+    </div>
+    <dl>
+      <dt>Owns</dt><dd><code>explainability/</code></dd>
+      <dt>Fills</dt><dd><code>result.gradcamMap</code></dd>
+      <dt>Depends on</dt><dd>M4's trained model, M2 and M3's masks</dd>
+    </dl>
+
+    <h4>Today, while you're blocked</h4>
+    <p>Read MATLAB's built-in <code>gradCAM</code> (Deep Learning Toolbox) and sketch the report layout on paper. You can run <code>gradCAM</code> against the existing baseline model as soon as M4 hands it over.</p>
+
+    <h4>The claim you have to support</h4>
+    <p>The problem statement asks for "lesion-level evidence correlated with clinical criteria". That is a specific, checkable claim and it needs two things combined:</p>
+    <ul>
+      <li><strong>Grad-CAM shows where the model looked.</strong> On its own that's a pretty heatmap and nothing more.</li>
+      <li><strong>M3's masks show where disease actually is.</strong></li>
+    </ul>
+    <p>The <em>overlap between the two</em> is the entire explainability argument: "the model's attention concentrated on this region, and that region contains 3 confirmed microaneurysms." It can only be verified on A. Segmentation's 81 images, so build around that constraint from the start.</p>
+
+    <h4>Also yours</h4>
+    <ul>
+      <li><strong>Confidence calibration</strong> — temperature or Platt scaling against a validation set, checked with a reliability diagram. A model saying "0.9" should be right about 90% of the time.</li>
+      <li><strong>Automated annotated report</strong> — image, overlays, grade, confidence, exported as PDF or figure.</li>
+      <li><strong>Review screen</strong> in App Designer, and <strong>actually time two teammates</strong> doing a mock ophthalmologist review. The &lt;30 s claim in the problem statement needs a measurement behind it, not an assertion.</li>
+    </ul>
+  </div>
+
+  <div class="mod">
+    <div class="mod-head">
+      <span class="mod-id">M6</span>
+      <span class="mod-title">Simulink workflow + integration</span>
+      <span class="pill p-now">Start now</span>
+    </div>
+    <dl>
+      <dt>Owns</dt><dd><code>simulink/</code> and <code>integration/</code></dd>
+      <dt>Fills</dt><dd>Everything — <code>analyzeImage()</code> assembles the struct</dd>
+      <dt>Note</dt><dd>Two jobs, two branches. <code>simulink</code> now; <code>integration</code> when that work starts on Day 4.</dd>
+    </dl>
+
+    <h4>Simulink — build first</h4>
+    <p>A block diagram skeleton with placeholder rates: source → enhancement → segmentation → grading → review, as subsystems. Then fill the placeholders with real estimates — patients per day, image size 5–10 MB, rural bandwidth — so it produces a first throughput number.</p>
+    <p>The full version models this as a <strong>queueing problem</strong>: arrival rate against service rate, with a review-time distribution. That's where "optimising resource allocation for 100,000+ patients annually" gets an actual number attached to it.</p>
+
+    <div class="note">
+      <span class="lbl">Check for SimEvents</span>
+      <p>Plain Simulink is clumsy at queueing; <strong>SimEvents</strong> is built for exactly it. It was not in the toolbox list on the machine we checked. Put it in the same licence request as anything else missing, today — and don't block on it, plain Simulink can approximate for the POC.</p>
+      <p>One number from M4 worth modelling: at the current operating point the system refers roughly 28% of healthy people unnecessarily. Across 100,000 screenings that's tens of thousands of extra appointments against about one ophthalmologist per 100,000 rural population. That trade-off <em>is</em> your model's insight.</p>
+    </div>
+
+    <h4>Integration — Day 4, and budget the whole day</h4>
+    <p>Wire every module into one <code>analyzeImage()</code> per the shared struct, then run the full pipeline on 30–50 sample images end to end. This is the highest-risk day in the schedule. <strong>No new features that day</strong> — only plumbing. The struct contract exists precisely so this is boring.</p>
+  </div>
+</section>
+
+<section id="plan">
+  <h2><span class="num">§7</span>What's left</h2>
+
+  <h3>Today</h3>
+  <ul>
+    <li>Everyone: clone, branch, download data, run <code>test_loadFundus()</code>, read your module section</li>
+    <li>Everyone: confirm your toolboxes with <code>ver</code>; request anything missing <em>today</em></li>
+    <li>M1, M2, M3, M6: first working version of your module skeleton — it doesn't have to be good, it has to run</li>
+    <li>M5: read <code>gradCAM</code>, sketch the report layout</li>
+    <li>Delete the stray <code>utils</code> file at the repo root — it's an empty file created by accident, and shared helpers belong in <code>common/</code></li>
+  </ul>
+
+  <h3>By the POC on 15 Sep</h3>
+  <ul>
+    <li>End-to-end pipeline: sample image → quality flag → enhanced image → segmentation overlays → DR grade → Grad-CAM → confidence</li>
+    <li>Preliminary metrics table, with confidence intervals and honest gaps</li>
+    <li>Simulink model producing at least one meaningful chart</li>
+    <li>8–10 slide deck and a full dry run</li>
+    <li>Clean repo with a README per module</li>
+  </ul>
+
+  <h3>Team practices, starting now</h3>
+  <ul>
+    <li><strong>Daily 15-minute standup</strong> through the crunch. Its real job is catching integration drift early, not status reporting.</li>
+    <li><strong>Shared results sheet</strong> — one row per module, current metric against target, so nobody discovers a gap on the 29th.</li>
+    <li><strong>Report intervals, not points.</strong> Every metric in this project comes from a small sample. A number without an interval will get you challenged by a judge who knows statistics, and rightly.</li>
+  </ul>
+
+  <div class="note">
+    <span class="lbl">The habit that matters most</span>
+    <p>Write down the limitation you found before someone else finds it for you. The IDRiD/APTOS transfer gap, the 81-image validation set, the 25 grade-1 images — these are not embarrassments to hide. They are evidence that we understood our own system, and they are exactly the rigour the problem statement is asking for when it criticises existing solutions for lacking "clinical validation rigor".</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
