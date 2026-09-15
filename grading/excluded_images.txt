@@ -1,0 +1,22 @@
+# Images referenced by split.csv that are not present on this machine.
+#
+# split.csv is frozen and must never be edited. This file is the ONLY
+# sanctioned way to proceed without it, and loadSplit warns on every single
+# load that applies it, so the deviation cannot be forgotten.
+#
+# Declared 14 Sep 2026. Five APTOS files did not survive the transfer to the
+# training machine and are absent at the source copy as well; they exist on
+# the original machine (runBaseline could not have produced its cached
+# features or the 0.887 result without them). Restore them and DELETE THE
+# LINES BELOW -- counts return to the frozen split automatically.
+#
+# Effect: train 3464 -> 3461, val 336 -> 335, test_aptos 275 -> 274.
+# IDRiD test (103) is untouched, so the reported benchmark is unaffected.
+#
+# One entry per line, relpath exactly as it appears in split.csv.
+
+train_images/00b74780d31d.png
+train_images/0abf0c485f66.png
+train_images/0af296d2f04a.png
+train_images/0d8f60ed9280.png
+train_images/1b862fb6f65d.png

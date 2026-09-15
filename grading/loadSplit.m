@@ -112,9 +112,42 @@ if ~any(present)
          'IDRiD root = the unzipped "B. Disease Grading" folder.\n' ...
          'APTOS root = the folder CONTAINING train_images.'], T.file(1));
 elseif ~all(present)
-    bad = find(~present, 1);
-    error('loadSplit:missingImages', ...
-        '%d of %d images are missing. First: %s', ...
-        sum(~present), height(T), T.file(bad));
+    % Some rows did not resolve on disk. split.csv is a FROZEN artifact and is
+    % never edited to paper over that. A row may be dropped only if it has been
+    % DECLARED in grading/excluded_images.txt; anything missing and undeclared
+    % is still a hard error. That is the whole difference between a documented
+    % deviation and a silent one -- a test set that quietly shrinks from 275 to
+    % 274 is how a benchmark claim stops being checkable.
+    exFile = fullfile(here, 'excluded_images.txt');
+    excl   = strings(0, 1);
+    if isfile(exFile)
+        L    = string(strtrim(splitlines(fileread(exFile))));
+        excl = L(L ~= "" & ~startsWith(L, "#"));
+    end
+    isExcl = ismember(T.relpath, excl);
+
+    undeclared = ~present & ~isExcl;
+    if any(undeclared)
+        bad = find(undeclared, 1);
+        error('loadSplit:missingImages', ...
+            ['%d of %d images are missing and NOT declared in\n  %s\n' ...
+             'First: %s\n' ...
+             'Restore the file, or add its relpath to that list if the loss ' ...
+             'is deliberate.'], sum(undeclared), height(T), exFile, T.file(bad));
+    end
+
+    drop = ~present & isExcl;
+    if any(drop)
+        u = unique(T.split(drop));
+        parts = strings(1, numel(u));
+        for k = 1:numel(u)
+            parts(k) = sprintf('%s %d', u(k), sum(drop & T.split == u(k)));
+        end
+        warning('loadSplit:excludedImages', ...
+            ['%d declared-missing image(s) dropped [%s]. Counts are BELOW the ' ...
+             'frozen split -- quote them with that caveat. See %s'], ...
+            sum(drop), strjoin(parts, ', '), exFile);
+        T = T(~drop, :);
+    end
 end
 end
